@@ -543,16 +543,15 @@ async function renderMultiGame(){
    message('multiGameMessage',my>op?'فزت! 🎉':my<op?'فاز صديقك!':'تعادل!');return;
   }
   const db=await requireBackend();
-  const {data:rows,error}=await db.from('game_plant_submissions').select('player_id').eq('room_code',multiRoom.code).eq('round_no',state.round);
+  const {data:mine,error}=await db.rpc('game_plant_my_submission',{p_code:multiRoom.code});
   if(error)throw error;
-  const mine=(rows||[]).some(x=>x.player_id===currentUser.id);
   $('multiGameContent').innerHTML='<div class="center"><div class="eyebrow">ROUND '+state.round+' / 3</div><h2>الحرف: <span style="color:var(--cyan);font-size:36px">'+escapeText(state.letter)+'</span></h2><p class="muted">اكتب إجابات تبدأ بالحرف نفسه ثم أرسلها.</p></div>';
   if(mine){
    $('multiGameContent').insertAdjacentHTML('beforeend','<div class="multi-status">تم إرسال إجاباتك بنجاح. ننتظر إجابات اللاعب الآخر...</div>');
    message('multiGameMessage','أُرسلت إجاباتك. لا تغلق الغرفة.');
   }else{
    const form=document.createElement('div');form.className='word-grid';
-   for(const [key,label] of plantCategories){const wrap=document.createElement('label');wrap.textContent=label+' <small style="color:var(--muted)">('+state.letter+')</small>';const input=document.createElement('input');input.className='word-field';input.id='plant-'+key;input.maxLength=35;input.placeholder='اكتب '+label;wrap.appendChild(input);form.appendChild(wrap)}
+   for(const [key,label] of plantCategories){const wrap=document.createElement('label');const caption=document.createElement('span');caption.textContent=label+' ('+state.letter+')';wrap.appendChild(caption);const input=document.createElement('input');input.className='word-field';input.id='plant-'+key;input.maxLength=35;input.placeholder='اكتب '+label;wrap.appendChild(input);form.appendChild(wrap)}
    $('multiGameContent').appendChild(form);
    const send=document.createElement('button');send.className='primary';send.textContent='إرسال الإجابات';send.onclick=submitPlantAnswers;$('multiGameContent').appendChild(send);
    message('multiGameMessage','بمجرد إرسال اللاعبَين، تُحسب النقاط تلقائياً.');
