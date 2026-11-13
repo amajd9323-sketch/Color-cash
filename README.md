@@ -1,20 +1,52 @@
 # Color Clash
 
-A mobile-first Arabic/English browser game prototype with Solo vs Bot, Color Find, Color Match, and Color Memory rounds. Dark neon interface; installable PWA.
+لعبة ويب عربية بتصميم Dark Neon، تعمل على الهاتف والكمبيوتر، وتدعم اللعب الفردي ضد الكمبيوتر وغرف 1 ضد 1 عبر Supabase Realtime.
 
-## Run
-Open `index.html` or publish this repository with GitHub Pages.
+## الميزات
 
-## Online rooms
-Create a Supabase project, run `supabase.sql` in its SQL Editor, then configure the deployed page with your Supabase project URL and public anon key. Never expose a service-role key.
+- 10 جولات في كل مباراة.
+- 3 تحديات: اكتشاف اللون المختلف، مطابقة اللون، والذاكرة.
+- توقيت 20 ثانية لكل جولة.
+- تسجيل أفضل نتيجة فردية على الجهاز.
+- إنشاء غرفة خاصة برمز من 6 أحرف والانضمام إليها.
+- مزامنة اللاعبين والجولات والنقاط لحظياً عبر Supabase.
+- تسجيل دخول مجهول إلى Supabase؛ لا يحتاج اللاعب إلى إنشاء حساب.
+- PWA قابلة للتثبيت مع Service Worker ودعم تخزين الملفات الأساسية للاستخدام الفردي دون اتصال.
 
-**Prototype warning:** room creation/join/start sync is a starter implementation. The SQL policies are permissive and scores are client-side. Before public launch, add Supabase Auth, membership-based RLS, server-side score validation, reconnect handling, room expiry/cleanup, and anti-cheat checks.
+## تشغيل اللعبة
 
-## Android
-Wrap the web app with Capacitor on a computer with Node.js and Android Studio. Build the Android APK from Android Studio after syncing the Capacitor project.
+يمكن فتح `index.html` مباشرة للعب الفردي، أو نشر المستودع على GitHub Pages.
 
-## Files
-- `index.html`: game UI and gameplay
-- `manifest.json`: PWA manifest
-- `icon.svg`: app icon
-- `supabase.sql`: starter database schema
+## تفعيل اللعب الجماعي (مرة واحدة)
+
+1. أنشئ مشروعاً في Supabase.
+2. من **Authentication → Sign In / Providers** فعّل **Anonymous Sign-Ins**.
+3. افتح **SQL Editor** في مشروعك، والصق محتوى `supabase.sql` ثم شغّله.
+4. افتح اللعبة واضغط **الإعدادات**.
+5. أدخل **Project URL** والمفتاح العام **anon / publishable key** من إعدادات API في Supabase، ثم اضغط حفظ واختبار الاتصال.
+6. أنشئ غرفة وشارك الرمز مع اللاعب الثاني. على الجهاز الثاني افتح رابط اللعبة، أدخل بيانات مشروع Supabase نفسها، ثم انضم باستخدام الرمز.
+
+**تنبيه:** ملف SQL يحذف جدول الغرف التجريبي السابق `cc_rooms` قبل إنشاء المخطط الجديد. لا تشغّله على قاعدة تحتوي بيانات مهمة من نسخة سابقة. لا تستخدم `service_role` key داخل المتصفح. صلاحيات القراءة مقيدة بأعضاء الغرفة، وتغييرات حالة الغرفة والنقاط تتم من خلال RPC functions. هذا مناسب كنموذج لعب أولي، لكنه ليس نظاماً تنافسياً محصناً ضد الغش على مستوى البطولات؛ يلزم إضافة حدود إنشاء الغرف، انتهاء صلاحية الغرف، ومراقبة إساءة الاستخدام قبل إطلاق تجاري واسع.
+
+## النشر عبر GitHub Pages
+
+أُضيف workflow في `.github/workflows/pages.yml` للنشر التلقائي عند كل تحديث لفرع `main`.
+
+لأول مرة:
+1. افتح **Settings → Pages** في المستودع.
+2. اختر **GitHub Actions** كمصدر النشر، إذا لم يكن محدداً.
+3. افتح تبويب **Actions** وتأكد من نجاح مهمة **Deploy Color Clash to GitHub Pages**.
+4. سيكون رابط الموقع عادة: `https://amajd9323-sketch.github.io/Color-cash/`.
+
+## تثبيت اللعبة على Android
+
+بعد نشر الموقع افتحه في Chrome على الهاتف، ثم اختر **Install app / Add to Home screen** من قائمة المتصفح. هذا يثبت نسخة PWA. للحصول على APK مستقل عبر Capacitor يلزم بناء Android باستخدام Node.js وAndroid Studio على جهاز كمبيوتر.
+
+## الملفات
+
+- `index.html`: واجهة اللعبة ومنطق اللعب والاتصال بـ Supabase.
+- `manifest.json`: بيانات تطبيق الويب.
+- `icon.svg`: أيقونة التطبيق.
+- `sw.js`: التخزين المؤقت للأصول الأساسية.
+- `supabase.sql`: الجداول والسياسات ودوال اللعب الجماعي.
+- `.github/workflows/pages.yml`: النشر الآلي إلى GitHub Pages.
