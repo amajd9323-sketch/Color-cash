@@ -64,24 +64,41 @@ jobs:
       - name: Sync Android project
         run: npx cap sync android
 
-      - name: Generate Color Clash launcher icons
+      - name: Generate real Color Clash launcher icons
         run: |
           sudo apt-get update
-          sudo apt-get install -y librsvg2-bin
+          sudo apt-get install -y imagemagick
+
+          # icon.svg contains the artwork as an embedded JPEG. Extract it first;
+          # rendering this SVG directly with librsvg made transparent/blank icons.
+          python - <<'PY'
+          import base64, re
+          from pathlib import Path
+          svg = Path("icon.svg").read_text(encoding="utf-8")
+          match = re.search(r"data:image/jpeg;base64,([^\\\"]+)", svg)
+          if not match:
+              raise SystemExit("Color Clash logo image was not found inside icon.svg")
+          image = base64.b64decode(match.group(1), validate=True)
+          if not image.startswith(b"\\xff\\xd8") or not image.endswith(b"\\xff\\xd9"):
+              raise SystemExit("Embedded Color Clash logo is not a valid JPEG")
+          Path("color-clash-launcher.jpg").write_bytes(image)
+          print(f"Extracted Color Clash logo: {len(image)} bytes")
+          PY
+
+          mkdir -p android/app/src/main/res/values
+          mkdir -p android/app/src/main/res/mipmap-anydpi-v26
+
           for item in "mdpi 48" "hdpi 72" "xhdpi 96" "xxhdpi 144" "xxxhdpi 192"; do
             set -- $item
             density="$1"
             pixels="$2"
             target="android/app/src/main/res/mipmap-$density"
             mkdir -p "$target"
-            rsvg-convert -w "$pixels" -h "$pixels" icon.svg > "$target/ic_launcher.png"
-            cp "$target/ic_launcher.png" "$target/ic_launcher_round.png"
+            convert color-clash-launcher.jpg -resize "${pixels}x${pixels}!" -strip "PNG32:$target/ic_launcher.png"
+            convert color-clash-launcher.jpg -resize "${pixels}x${pixels}!" -strip "PNG32:$target/ic_launcher_round.png"
+            convert color-clash-launcher.jpg -resize "${pixels}x${pixels}!" -strip "PNG32:$target/ic_launcher_foreground.png"
           done
 
-          # Android 8+ adaptive launcher icon: use the supplied Color Clash artwork.
-          mkdir -p android/app/src/main/res/mipmap-anydpi-v26
-          mkdir -p android/app/src/main/res/values
-          rsvg-convert -w 432 -h 432 icon.svg > android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png
           cat > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml <<'XML'
           <?xml version="1.0" encoding="utf-8"?>
           <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
@@ -89,16 +106,21 @@ jobs:
               <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
           </adaptive-icon>
           XML
+          cp android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+
           cat > android/app/src/main/res/values/color_clash_launcher.xml <<'XML'
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
-              <color name="color_clash_launcher_background">#090B16</color>
+              <color name="color_clash_launcher_background">#080A1C</color>
           </resources>
           XML
-          # Verify both legacy and adaptive launcher assets exist before Gradle build.
-          test -s android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
-          test -s android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png
+
+          # Fail the build instead of publishing an APK with blank or missing icons.
+          identify android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          test "$(stat -c%s android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png)" -gt 5000
+          test "$(stat -c%s android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png)" -gt 5000
           test -s android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+          test -s android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
 
       - name: Build debug APK
         working-directory: android
