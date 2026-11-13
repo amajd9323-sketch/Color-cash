@@ -1,7 +1,7 @@
 {
   "name": "Color Clash",
   "short_name": "Color Clash",
-  "description": "Color Clash — solo challenges and online multiplayer rooms.",
+  "description": "Color Clash — fast color challenges and online multiplayer rooms.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
