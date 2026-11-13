@@ -1,7 +1,7 @@
 {
-  "name": "Color Clash",
-  "short_name": "Color Clash",
-  "description": "لعبة تحدي الألوان والذاكرة",
+  "name": "Color Clash — HEMA × Merve",
+  "short_name": "HEMA Games",
+  "description": "ألعاب أونلاين من HEMA كهدية إلى Merve",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
