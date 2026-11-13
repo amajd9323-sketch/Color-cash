@@ -1,8 +1,8 @@
 {
-  "name": "color-clash-mobile",
-  "version": "1.0.0",
+  "name": "color-clash-android",
+  "version": "1.0.1",
   "private": true,
-  "description": "Color Clash multi-game Android wrapper",
+  "description": "Color Clash standalone Android app with online multiplayer",
   "scripts": {
     "build:web": "node scripts/build-web.js",
     "build:android": "npm run build:web && cap sync android"
