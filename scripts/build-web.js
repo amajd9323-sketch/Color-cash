@@ -17,4 +17,28 @@ for (const file of files) {
   fs.copyFileSync(source, path.join(out, file));
 }
 
-console.log('Web app copied to www/');
+// The Android package is dedicated to Color Clash only.
+// Keep legacy DOM elements in the document because the shared script
+// still wires handlers to them, but hide all other game entry points.
+const indexPath = path.join(out, 'index.html');
+let html = fs.readFileSync(indexPath, 'utf8');
+html = html.replace(/<title>[\\s\\S]*?<\\/title>/i, '<title>Color Clash</title>');
+html = html.replace(
+  /<meta name="description" content="[^"]*">/i,
+  '<meta name="description" content="Color Clash — solo challenges and online multiplayer rooms.">'
+);
+const appOnlyStyle = `
+<style id="color-clash-android-only">
+  .multi-title,
+  #home .multi-title + p,
+  #home .multi-title + p + .grid,
+  .game-card,
+  .creator-credit,
+  #multiLobby,
+  #multiGame { display: none !important; }
+</style>
+`;
+html = html.replace(/<\\/head>/i, appOnlyStyle + '\\n</head>');
+fs.writeFileSync(indexPath, html, 'utf8');
+
+console.log('Color Clash-only Android web app copied to www/');
