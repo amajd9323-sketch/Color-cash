@@ -289,7 +289,7 @@ function handleRoomUpdate(){
   const meHost=isHost();$('youLabel').firstChild.textContent=meHost?room.host_name:room.guest_name;$('opLabel').firstChild.textContent=meHost?room.guest_name:room.host_name;
   updateScores(meHost?room.host_score:room.guest_score,meHost?room.guest_score:room.host_score);
   if(lastRenderedRound!==room.round){lastRenderedRound=room.round;multiSubmitted=false;message('feedback','');renderChallenge(room.deck[room.round],submitMulti);startTimer(()=>submitMulti('__TIMEOUT__'))}
-  else if(multiSubmitted){message('feedback',room[meHost?'guest_answered':'host_answered']?'تم تسجيل إجابتكما، جارٍ الانتقال...':'تم تسجيل إجابتك. ننتظر إجابة اللاعب الآخر...')}
+  else if(multiSubmitted){message('feedback',room[meHost?'guest_answered':'host_answered']?'اللاعب الآخر أرسل إجابته أيضاً، جارٍ الانتقال...':'تم تسجيل إجابتك. ننتظر إجابة اللاعب الآخر...')}
   return;
  }
  if(room.status==='finished'){stopTimer();showOnlineResult();return}
@@ -305,12 +305,12 @@ async function startOnline(){
 }
 async function submitMulti(answer){
  if(multiSubmitted||!room||room.status!=='playing')return;
- multiSubmitted=true;stopTimer();const spent=elapsed();
+ multiSubmitted=true;const submittedRound=room.round;stopTimer();const spent=elapsed();
  $('gameContent').querySelectorAll('button').forEach(b=>b.disabled=true);message('feedback','تم إرسال إجابتك، ننتظر اللاعب الآخر...');
  try{
   const db=await requireBackend();const {data,error}=await db.rpc('cc_submit_answer',{p_code:room.code,p_answer:String(answer),p_elapsed_ms:spent});if(error)throw error;
-  message('feedback',data?.correct?'إجابة صحيحة! +'+data.points+' نقطة. ننتظر اللاعب الآخر.':'تم تسجيل الإجابة. ننتظر اللاعب الآخر.');
   await refreshRoom();
+  if(room?.status==='playing'&&room.round===submittedRound)message('feedback',data?.correct?'إجابة صحيحة! +'+data.points+' نقطة. ننتظر اللاعب الآخر.':'تم تسجيل الإجابة. ننتظر اللاعب الآخر.');
  }catch(e){multiSubmitted=false;message('feedback','تعذر إرسال الإجابة: '+(e.message||e));}
 }
 function showOnlineResult(){
@@ -344,7 +344,7 @@ $('leaveRoom').onclick=()=>leaveRealtime(true);$('quitGame').onclick=()=>{if(gam
 $('nextRound').onclick=()=>{};$('playAgain').onclick=()=>{if(gameMode==='solo')startSolo();else show('home')};$('resultHome').onclick=()=>leaveRealtime(true);
 $('saveSettings').onclick=saveSettings;$('clearSettings').onclick=()=>{localStorage.removeItem('ccSupabase');backend=null;currentUser=null;$('supabaseUrl').value='';$('supabaseKey').value='';setConnection('الوضع الفردي متاح');message('settingsMessage','تم مسح بيانات الاتصال.')};
 $('playerName').value=localPlayerName;setBest();
-if(getConfig())setConnection('بيانات الاتصال محفوظة، جارٍ التحقق...');
+if(getConfig())setConnection('بيانات الاتصال محفوظة');
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
 </script>
 </body>
