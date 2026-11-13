@@ -241,7 +241,7 @@ function makeRoomCode(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Ar
 function playerName(){const name=($('playerName').value||localPlayerName||'Player').trim().slice(0,18)||'Player';localPlayerName=name;localStorage.setItem('ccPlayerName',name);return name}
 function openLobby(kind){
  if(room)leaveRealtime(false);
- gameMode=kind;$('lobbyTitle').textContent=kind==='create'?'إنشاء غرفة':'دخول غرفة';
+ gameMode='online';$('lobbyTitle').textContent=kind==='create'?'إنشاء غرفة':'دخول غرفة';
  $('createControls').classList.toggle('hidden',kind!=='create');$('joinControls').classList.toggle('hidden',kind!=='join');$('roomInfo').classList.add('hidden');
  $('playerName').value=localPlayerName;$('roomInput').value='';message('lobbyMessage','');show('lobby');
 }
