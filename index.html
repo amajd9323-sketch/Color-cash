@@ -525,10 +525,16 @@ async function renderMultiGame(){
   if(state.phase==='results'){
    const pts=state.lastPoints||{host:0,guest:0};
    const myPts=meHost?pts.host:pts.guest,opPts=meHost?pts.guest:pts.host;
-   $('multiGameContent').innerHTML='<div class="center"><div class="eyebrow">ROUND '+state.round+' / 3</div><h2>نتيجة الجولة</h2><p>حرف الجولة: <b>'+escapeText(state.letter)+'</b></p><div class="row"><div class="scorebox">نقاطك<strong>+'+myPts+'</strong></div><div class="scorebox">نقاط الخصم<strong>+'+opPts+'</strong></div></div></div>';
+   const db=await requireBackend();
+   const {data:answerRows,error}=await db.from('game_plant_submissions').select('player_id,answers').eq('room_code',multiRoom.code).eq('round_no',state.round);
+   if(error)throw error;
+   const hostAnswers=(answerRows||[]).find(x=>x.player_id===multiRoom.host_id)?.answers||{};
+   const guestAnswers=(answerRows||[]).find(x=>x.player_id===multiRoom.guest_id)?.answers||{};
+   const rows=plantCategories.map(([key,label])=>'<div class="row"><span>'+label+'</span><b>'+escapeText(hostAnswers[key]||'—')+'</b><b>'+escapeText(guestAnswers[key]||'—')+'</b></div>').join('');
+   $('multiGameContent').innerHTML='<div class="center"><div class="eyebrow">ROUND '+state.round+' / 3</div><h2>نتيجة الجولة</h2><p>حرف الجولة: <b>'+escapeText(state.letter)+'</b></p><div class="row"><div class="scorebox">نقاطك<strong>+'+myPts+'</strong></div><div class="scorebox">نقاط الخصم<strong>+'+opPts+'</strong></div></div></div><hr><div class="row muted"><span>الفئة</span><b>'+escapeText(multiRoom.host_name)+'</b><b>'+escapeText(multiRoom.guest_name)+'</b></div>'+rows;
    const next=document.createElement('button');next.className='primary';next.textContent=state.round>=3?'عرض النتيجة النهائية':'الجولة التالية';next.onclick=nextPlantRound;
    $('multiGameContent').appendChild(next);
-   message('multiGameMessage','الإجابات المتطابقة تمنح كل لاعب 5 نقاط، والإجابة المختلفة 10 نقاط.');
+   message('multiGameMessage','الإجابة الصحيحة تبدأ بالحرف. المتطابقة تمنح 5 نقاط لكل لاعب، والمختلفة 10 نقاط.');
    return;
   }
   if(state.phase==='finished'){
