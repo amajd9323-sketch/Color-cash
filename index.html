@@ -143,6 +143,8 @@ let backend=null, currentUser=null, room=null, roomChannel=null;
 let gameMode='solo', soloDeck=[], soloAnswers=[], soloRound=0, soloScore=0, botScore=0;
 let gameTimer=null, roundStartedAt=0, remaining=20, roundLocked=false, multiSubmitted=false, lastRenderedRound=-1, memoryInput=[];
 let localPlayerName=localStorage.getItem('ccPlayerName')||'Player';
+// Public Supabase client settings. This publishable key is intended for browser use; protect data with RLS.
+const DEFAULT_SUPABASE_CONFIG={url:'https://aburwotarmzycgbfqkle.supabase.co',key:'sb_publishable_XxnQi7epJ6rV-h1o3mcq1g_RymFo3US'};
 
 function show(id){screens.forEach(s=>$(s).classList.toggle('hidden',s!==id))}
 function message(id,text){$(id).textContent=text||''}
@@ -219,7 +221,7 @@ function finishSolo(){
  $('resultRows').innerHTML='<p>نتيجتك: <b>'+soloScore+'</b></p><p>نتيجة الكمبيوتر: <b>'+botScore+'</b></p>';show('result');
 }
 
-function getConfig(){try{return JSON.parse(localStorage.getItem('ccSupabase')||'null')}catch{return null}}
+function getConfig(){try{return JSON.parse(localStorage.getItem('ccSupabase')||'null')||DEFAULT_SUPABASE_CONFIG}catch{return DEFAULT_SUPABASE_CONFIG}}
 async function connectBackend(urlInput,keyInput){
  if(!window.supabase?.createClient)throw new Error('تعذر تحميل مكتبة Supabase. تحقق من اتصال الإنترنت ثم أعد تحميل الصفحة.');
  const cfg={url:(urlInput||'').trim().replace(/\/$/,''),key:(keyInput||'').trim()};
@@ -344,7 +346,7 @@ $('leaveRoom').onclick=()=>leaveRealtime(true);$('quitGame').onclick=()=>{if(gam
 $('nextRound').onclick=()=>{};$('playAgain').onclick=()=>{if(gameMode==='solo')startSolo();else show('home')};$('resultHome').onclick=()=>leaveRealtime(true);
 $('saveSettings').onclick=saveSettings;$('clearSettings').onclick=()=>{localStorage.removeItem('ccSupabase');backend=null;currentUser=null;$('supabaseUrl').value='';$('supabaseKey').value='';setConnection('الوضع الفردي متاح');message('settingsMessage','تم مسح بيانات الاتصال.')};
 $('playerName').value=localPlayerName;setBest();
-if(getConfig())setConnection('بيانات الاتصال محفوظة');
+const initialConfig=getConfig();if(initialConfig){setConnection('جارٍ الاتصال بخادم اللعب');connectBackend(initialConfig.url,initialConfig.key).catch(e=>{setConnection('اللعب الفردي متاح');console.warn('Supabase connection:',e.message)})}
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
 </script>
 </body>
