@@ -42,6 +42,23 @@ label{display:block;font-size:13px;color:#c3cbe2;margin-top:10px}.center{text-al
 .foot{text-align:center;color:#687393;font-size:12px;margin-top:25px}
 hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 @media(max-width:520px){.grid{grid-template-columns:1fr}.panel{padding:16px}.tiles{gap:6px}.tile{border-radius:8px}.wrap{padding:12px 12px 35px}.mode{min-height:105px}}
+
+/* HEMA x Merve multi-game hub */
+.creator-credit{margin:15px auto 0;padding:12px 16px;max-width:520px;border:1px solid #3b496a;border-radius:15px;background:linear-gradient(110deg,#1b2140,#241932);color:#e9eaff;font-size:13px;line-height:1.7;text-align:center}
+.creator-credit strong{color:var(--cyan)}.creator-credit .gift{color:#ff91c5}
+.multi-title{margin:8px 0 12px;font-size:20px}.game-card .emoji{font-size:30px}.game-card{min-height:140px}
+.xo-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;max-width:390px;margin:18px auto}
+.xo-cell{aspect-ratio:1;border-radius:17px;border:1px solid #3d4a70;background:#10172b;font-size:clamp(34px,11vw,58px);font-weight:950;color:var(--cyan)}
+.xo-cell.o{color:var(--pink)}.xo-cell:disabled{opacity:1}
+.word-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:15px 0}
+.word-field{background:#0b1020;border:1px solid var(--line);border-radius:12px;padding:11px;color:#fff;min-width:0;width:100%;min-height:47px}
+.direction-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}
+.direction-btn{min-height:90px;border-radius:16px;background:#151c32;border:1px solid #3a4668;font-size:25px}
+.direction-btn small{display:block;font-size:12px;color:var(--muted);margin-top:7px}
+.multi-status{padding:12px;border-radius:13px;background:#0b1224;border:1px solid var(--line);text-align:center;color:#dce5ff;line-height:1.7}
+.credit-footer{color:#8b96b8;line-height:1.9}
+@media(max-width:520px){.word-grid{grid-template-columns:1fr}.direction-btn{min-height:82px}.game-card{min-height:112px}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -62,6 +79,17 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
    <button class="mode" id="how"><div class="emoji">❔</div><h3>طريقة اللعب</h3><p>تعرف على التحديات وقواعد احتساب النقاط.</p></button>
   </div>
   <div class="row" style="margin-top:18px"><span class="muted" id="best">أفضل نتيجة: 0</span><span class="muted">10 جولات • 3 تحديات</span></div>
+
+  <hr>
+  <h2 class="center multi-title">🎮 ألعاب الأصدقاء أونلاين</h2>
+  <p class="muted center">اختر لعبة، أنشئ غرفة، وشارك الرمز مع صديقك.</p>
+  <div class="grid">
+   <button class="mode game-card" id="openXO"><div class="emoji">⭕</div><h3>XO — إكس أو</h3><p>تحدٍ مباشر 1 ضد 1. كل لاعب بدوره.</p></button>
+   <button class="mode game-card" id="openPlant"><div class="emoji">🌱</div><h3>نبات جماد حيوان</h3><p>ثلاث جولات بحروف عشوائية ونقاط للإجابات.</p></button>
+   <button class="mode game-card" id="openPenalty"><div class="emoji">⚽</div><h3>ركلات الترجيح</h3><p>سدّد أو تصدَّ، خمس ركلات لكل لاعب.</p></button>
+  </div>
+  <div class="creator-credit"><strong>Created by HEMA</strong><br><span class="gift">صُنعت بحب كهدية إلى Merve ❤️</span></div>
+
  </div>
 </section>
 
@@ -129,12 +157,54 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
  </div>
 </section>
 
-<div class="foot">COLOR CLASH • العب بذكاء، افُز بالألوان!</div>
+
+<section id="multiLobby" class="screen hidden">
+ <div class="panel">
+  <div class="row"><button class="secondary" id="multiLobbyBack">← الرئيسية</button><span class="pill">غرفة خاصة أونلاين</span></div>
+  <h2 id="multiTitle">لعبة الأصدقاء</h2>
+  <label for="multiPlayerName">اسم اللاعب</label><input class="field" id="multiPlayerName" maxlength="18" placeholder="اكتب اسمك">
+  <div class="grid">
+   <button class="primary" id="multiCreate">إنشاء غرفة</button>
+   <button class="secondary" id="multiShowJoin">دخول برمز</button>
+  </div>
+  <div id="multiJoinPanel" class="hidden">
+   <label for="multiRoomInput">رمز الغرفة</label><input class="field" id="multiRoomInput" maxlength="6" placeholder="ABC123" autocapitalize="characters">
+   <button class="primary" id="multiJoin">انضم إلى الغرفة</button>
+  </div>
+  <div id="multiRoomInfo" class="hidden">
+   <hr><p class="muted center">رمز مشاركة الغرفة</p><div class="code" id="multiRoomCode">------</div>
+   <div class="actions"><button class="secondary" id="multiCopy">نسخ الرمز</button><button class="secondary" id="multiShare">مشاركة</button></div>
+   <div class="note" style="margin-top:14px">
+    <div class="row"><span>المضيف</span><strong id="multiHost">—</strong></div>
+    <div class="row"><span>اللاعب الثاني</span><strong id="multiGuest">بانتظار الانضمام...</strong></div>
+    <p id="multiRoomStatus" class="center">بانتظار اللاعب الثاني...</p>
+   </div>
+   <div class="actions"><button class="primary" id="multiStart" disabled>ابدأ اللعب</button><button class="danger" id="multiLeave">مغادرة الغرفة</button></div>
+  </div>
+  <p class="statusline" id="multiMessage"></p>
+  <div class="note">كل لاعب يفتح اللعبة على جهازه، ويدخل رمز الغرفة نفسه. الاتصال يتم عبر Supabase.</div>
+ </div>
+</section>
+
+<section id="multiGame" class="screen hidden">
+ <div class="panel">
+  <div class="row"><button class="secondary" id="multiQuit">خروج</button><span class="pill" id="multiRoomBadge">غرفة</span></div>
+  <h2 id="multiGameTitle" class="center">اللعبة</h2>
+  <div class="row" style="margin:12px 0">
+   <div class="scorebox"><span id="multiYouName">أنت</span><strong id="multiYouScore">0</strong></div>
+   <div class="scorebox"><span id="multiOpponentName">الخصم</span><strong id="multiOpponentScore">0</strong></div>
+  </div>
+  <div id="multiGameContent"></div>
+  <p id="multiGameMessage" class="multi-status" aria-live="polite"></p>
+  <div class="actions"><button class="secondary" id="multiGameHome">الرئيسية</button></div>
+ </div>
+</section>
+<div class="foot credit-footer">COLOR CLASH • العب بذكاء، افُز بالألوان!<br><strong>HEMA</strong> × <strong>Merve</strong> ❤️<br>صنع اللعبة: HEMA — إهداء إلى Merve</div>
 </main>
 
 <script>
 const $ = id => document.getElementById(id);
-const screens = ['home','lobby','game','result','howScreen','settings'];
+const screens = ['home','lobby','game','result','howScreen','settings','multiLobby','multiGame'];
 const colors = ['#ff4f87','#48d9f6','#a47aff','#5ce6a7','#ffc857','#ff874d','#6f8cff','#e879f9'];
 const rand = n => Math.floor(Math.random()*n);
 const pick = a => a[rand(a.length)];
@@ -337,7 +407,211 @@ async function saveSettings(){
  finally{btn.disabled=false}
 }
 
-$('solo').onclick=startSolo;$('create').onclick=()=>openLobby('create');$('join').onclick=()=>openLobby('join');$('how').onclick=()=>show('howScreen');
+
+/* Multiplayer games: XO, Plant/Animal/Object, and Penalty Shootout */
+let multiType=null,multiRoom=null,multiChannel=null,multiPenaltySubmittedKick=-1,multiPlantResolving=false;
+const multiGameNames={xo:'XO — إكس أو',plant:'نبات جماد حيوان',penalty:'ركلات الترجيح'};
+const arabicLetters=['أ','ب','ت','ج','ح','د','ر','س','ع','ف','ك','م','ن','ه','و'];
+const plantCategories=[
+ ['name','اسم'],['plant','نبات'],['animal','حيوان'],['object','جماد'],['country','بلاد']
+];
+function newMultiCode(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:6},()=>chars[rand(chars.length)]).join('')}
+function multiPlayer(){const n=($('multiPlayerName').value||localPlayerName||'Player').trim().slice(0,18)||'Player';localPlayerName=n;localStorage.setItem('ccPlayerName',n);return n}
+function multiIsHost(){return !!multiRoom&&multiRoom.host_id===currentUser?.id}
+async function openMultiLobby(type){
+ if(multiChannel&&backend){try{await backend.removeChannel(multiChannel)}catch{}}
+ multiChannel=null;multiRoom=null;multiType=type;multiPenaltySubmittedKick=-1;
+ $('multiTitle').textContent=multiGameNames[type]||'لعبة الأصدقاء';
+ $('multiPlayerName').value=localPlayerName;$('multiRoomInput').value='';
+ $('multiJoinPanel').classList.add('hidden');$('multiRoomInfo').classList.add('hidden');
+ $('multiCreate').classList.remove('hidden');$('multiShowJoin').classList.remove('hidden');
+ message('multiMessage','');show('multiLobby');
+}
+async function createMultiRoom(){
+ const btn=$('multiCreate');btn.disabled=true;message('multiMessage','جارٍ الاتصال وإنشاء الغرفة...');
+ try{
+  const db=await requireBackend();const {data,error}=await db.rpc('game_create_room',{p_code:newMultiCode(),p_game_type:multiType,p_name:multiPlayer()});
+  if(error)throw error;multiRoom=data;await joinMultiRealtime(multiRoom.code);
+  $('multiCreate').classList.add('hidden');$('multiShowJoin').classList.add('hidden');$('multiJoinPanel').classList.add('hidden');$('multiRoomInfo').classList.remove('hidden');renderMultiLobby();
+ }catch(e){message('multiMessage','تعذر إنشاء الغرفة: '+(e.message||e))}
+ finally{btn.disabled=false}
+}
+async function joinMultiRoom(){
+ const btn=$('multiJoin');btn.disabled=true;message('multiMessage','جارٍ البحث عن الغرفة...');
+ try{
+  const db=await requireBackend();const code=$('multiRoomInput').value.trim().toUpperCase();
+  if(!/^[A-Z0-9]{6}$/.test(code))throw new Error('الرمز يجب أن يتكون من 6 أحرف أو أرقام.');
+  const {data,error}=await db.rpc('game_join_room',{p_code:code,p_name:multiPlayer()});if(error)throw error;
+  multiRoom=data;multiType=data.game_type;await joinMultiRealtime(code);
+  $('multiCreate').classList.add('hidden');$('multiShowJoin').classList.add('hidden');$('multiJoinPanel').classList.add('hidden');$('multiRoomInfo').classList.remove('hidden');renderMultiLobby();
+ }catch(e){message('multiMessage','تعذر الانضمام: '+(e.message||e))}
+ finally{btn.disabled=false}
+}
+async function joinMultiRealtime(code){
+ if(multiChannel&&backend)await backend.removeChannel(multiChannel);
+ multiChannel=backend.channel('multi-room-'+code).on('postgres_changes',{event:'*',schema:'public',table:'game_rooms',filter:'code=eq.'+code},payload=>{
+  if(payload.new&&payload.new.code===code){multiRoom=payload.new;handleMultiRoomUpdate()}
+ }).subscribe();
+ await refreshMultiRoom();
+}
+async function refreshMultiRoom(){
+ if(!backend||!multiRoom?.code)return;
+ const {data,error}=await backend.from('game_rooms').select('*').eq('code',multiRoom.code).single();
+ if(error)throw error;multiRoom=data;handleMultiRoomUpdate();
+}
+function renderMultiLobby(){
+ if(!multiRoom)return;
+ $('multiRoomCode').textContent=multiRoom.code;
+ $('multiHost').textContent=multiRoom.host_name||'—';
+ $('multiGuest').textContent=multiRoom.guest_name||'بانتظار الانضمام...';
+ $('multiStart').classList.toggle('hidden',!multiIsHost());
+ $('multiStart').disabled=!(multiIsHost()&&multiRoom.guest_id&&multiRoom.status==='waiting');
+ $('multiRoomStatus').textContent=multiRoom.status==='waiting'?(multiRoom.guest_id?'اللاعبان جاهزان! المضيف يبدأ اللعب.':'أرسل الرمز لصديقك وانتظر انضمامه.'):'تم بدء المباراة.';
+}
+function handleMultiRoomUpdate(){
+ if(!multiRoom)return;
+ if(multiRoom.status==='waiting'){show('multiLobby');renderMultiLobby();return}
+ show('multiGame');renderMultiGame().catch(e=>message('multiGameMessage','حدث خطأ: '+(e.message||e)));
+}
+async function startMultiGame(){
+ if(!multiRoom||!multiIsHost()||!multiRoom.guest_id)return;
+ const btn=$('multiStart');btn.disabled=true;message('multiMessage','جارٍ تجهيز المباراة...');
+ let state;
+ if(multiType==='xo')state={board:Array(9).fill(null),turn:multiRoom.host_id,moves:0,winner:null,draw:false};
+ if(multiType==='plant')state={phase:'answer',round:1,letter:pick(arabicLetters),scores:{host:0,guest:0},lastPoints:{host:0,guest:0}};
+ if(multiType==='penalty')state={phase:'shoot',kick:0,hostGoals:0,guestGoals:0,lastShot:null};
+ try{
+  const db=await requireBackend();const {data,error}=await db.rpc('game_publish_state',{p_code:multiRoom.code,p_event_type:'start',p_payload:{game:multiType},p_state:state,p_status:'playing'});
+  if(error)throw error;multiRoom=data;handleMultiRoomUpdate();
+ }catch(e){message('multiMessage','تعذر بدء اللعبة: '+(e.message||e));btn.disabled=false}
+}
+function multiNames(){
+ const host=multiRoom.host_name,guest=multiRoom.guest_name;
+ return multiIsHost()?{me:host,op:guest}:{me:guest,op:host};
+}
+function multiUpdateScore(me,op,meName,opName){
+ $('multiYouName').textContent=meName||'أنت';$('multiOpponentName').textContent=opName||'الخصم';
+ $('multiYouScore').textContent=me??0;$('multiOpponentScore').textContent=op??0;
+}
+async function renderMultiGame(){
+ if(!multiRoom)return;
+ $('multiRoomBadge').textContent='رمز: '+multiRoom.code;
+ const names=multiNames(),state=multiRoom.state||{},meHost=multiIsHost();
+ $('multiGameTitle').textContent=multiGameNames[multiType];
+ if(multiType==='xo'){
+  const board=state.board||Array(9).fill(null);
+  multiUpdateScore(multiRoom.status==='finished'?(state.winner===currentUser?.id?1:0):0,0,names.me,names.op);
+  const root=$('multiGameContent');root.innerHTML='<div class="xo-board" id="xoBoard"></div>';
+  board.forEach((v,i)=>{
+   const b=document.createElement('button');b.className='xo-cell'+(v==='O'?' o':'');b.textContent=v||'';
+   b.disabled=!!v||multiRoom.status!=='playing'||state.turn!==currentUser?.id;
+   b.setAttribute('aria-label','خلية '+(i+1));
+   b.onclick=()=>playXoMove(i);$('xoBoard').appendChild(b);
+  });
+  if(multiRoom.status==='finished'){
+   const result=state.draw?'تعادل!':state.winner===currentUser?.id?'مبروك! فزت 🎉':'انتهت المباراة، فاز صديقك.';
+   message('multiGameMessage',result+' — '+multiRoom.host_name+' (X) ضد '+multiRoom.guest_name+' (O)');
+  }else message('multiGameMessage',state.turn===currentUser?.id?'دورك الآن! اختر مربعاً.':'دور '+(state.turn===multiRoom.host_id?multiRoom.host_name:multiRoom.guest_name)+'، انتظر.');
+  return;
+ }
+ if(multiType==='plant'){
+  const scores=state.scores||{host:0,guest:0};
+  multiUpdateScore(meHost?scores.host:scores.guest,meHost?scores.guest:scores.host,names.me,names.op);
+  if(state.phase==='review'){
+   if(!multiPlantResolving){multiPlantResolving=true;try{const db=await requireBackend();const {data,error}=await db.rpc('game_plant_resolve',{p_code:multiRoom.code});if(error)throw error;multiRoom=data;}catch(e){message('multiGameMessage','تعذر حساب النقاط: '+e.message)}finally{multiPlantResolving=false}}
+   if(multiRoom.state?.phase==='review')return;
+   return renderMultiGame();
+  }
+  if(state.phase==='results'){
+   const pts=state.lastPoints||{host:0,guest:0};
+   const myPts=meHost?pts.host:pts.guest,opPts=meHost?pts.guest:pts.host;
+   $('multiGameContent').innerHTML='<div class="center"><div class="eyebrow">ROUND '+state.round+' / 3</div><h2>نتيجة الجولة</h2><p>حرف الجولة: <b>'+escapeText(state.letter)+'</b></p><div class="row"><div class="scorebox">نقاطك<strong>+'+myPts+'</strong></div><div class="scorebox">نقاط الخصم<strong>+'+opPts+'</strong></div></div></div>';
+   const next=document.createElement('button');next.className='primary';next.textContent=state.round>=3?'عرض النتيجة النهائية':'الجولة التالية';next.onclick=nextPlantRound;
+   $('multiGameContent').appendChild(next);
+   message('multiGameMessage','الإجابات المتطابقة تمنح كل لاعب 5 نقاط، والإجابة المختلفة 10 نقاط.');
+   return;
+  }
+  if(state.phase==='finished'){
+   $('multiGameContent').innerHTML='<h2 class="center">انتهت اللعبة! 🏆</h2>';
+   const my=meHost?scores.host:scores.guest,op=meHost?scores.guest:scores.host;
+   message('multiGameMessage',my>op?'فزت! 🎉':my<op?'فاز صديقك!':'تعادل!');return;
+  }
+  const db=await requireBackend();
+  const {data:rows,error}=await db.from('game_plant_submissions').select('player_id').eq('room_code',multiRoom.code).eq('round_no',state.round);
+  if(error)throw error;
+  const mine=(rows||[]).some(x=>x.player_id===currentUser.id);
+  $('multiGameContent').innerHTML='<div class="center"><div class="eyebrow">ROUND '+state.round+' / 3</div><h2>الحرف: <span style="color:var(--cyan);font-size:36px">'+escapeText(state.letter)+'</span></h2><p class="muted">اكتب إجابات تبدأ بالحرف نفسه ثم أرسلها.</p></div>';
+  if(mine){
+   $('multiGameContent').insertAdjacentHTML('beforeend','<div class="multi-status">تم إرسال إجاباتك بنجاح. ننتظر إجابات اللاعب الآخر...</div>');
+   message('multiGameMessage','أُرسلت إجاباتك. لا تغلق الغرفة.');
+  }else{
+   const form=document.createElement('div');form.className='word-grid';
+   for(const [key,label] of plantCategories){const wrap=document.createElement('label');wrap.textContent=label+' <small style="color:var(--muted)">('+state.letter+')</small>';const input=document.createElement('input');input.className='word-field';input.id='plant-'+key;input.maxLength=35;input.placeholder='اكتب '+label;wrap.appendChild(input);form.appendChild(wrap)}
+   $('multiGameContent').appendChild(form);
+   const send=document.createElement('button');send.className='primary';send.textContent='إرسال الإجابات';send.onclick=submitPlantAnswers;$('multiGameContent').appendChild(send);
+   message('multiGameMessage','بمجرد إرسال اللاعبَين، تُحسب النقاط تلقائياً.');
+  }
+  return;
+ }
+ if(multiType==='penalty'){
+  const hg=Number(state.hostGoals||0),gg=Number(state.guestGoals||0);
+  multiUpdateScore(meHost?hg:gg,meHost?gg:hg,names.me,names.op);
+  const kick=Number(state.kick||0);
+  if(multiRoom.status==='finished'){
+   $('multiGameContent').innerHTML='<div class="center"><div style="font-size:55px">🏆</div><h2>انتهت ركلات الترجيح</h2><div class="row"><div class="scorebox">'+escapeText(multiRoom.host_name)+'<strong>'+hg+'</strong></div><div class="scorebox">'+escapeText(multiRoom.guest_name)+'<strong>'+gg+'</strong></div></div></div>';
+   message('multiGameMessage',hg===gg?'تعادل!':(meHost?hg>gg:gg>hg)?'فزت بركلات الترجيح! 🎉':'فاز صديقك بركلات الترجيح.');
+   return;
+  }
+  const shooter=kick%2===0?multiRoom.host_id:multiRoom.guest_id;
+  const myRole=currentUser.id===shooter?'أنت المسدّد ⚽':'أنت الحارس 🧤';
+  $('multiGameContent').innerHTML='<div class="center"><div class="eyebrow">KICK '+(kick+1)+' / 10</div><h2>'+myRole+'</h2><p class="muted">'+(currentUser.id===shooter?'اختر جهة التسديد.':'توقّع جهة التسديد وحاول التصدي.')+'</p><div class="direction-grid" id="penaltyDirections"></div></div>';
+  const opts=[['left','⬅️','يسار'],['center','⬆️','الوسط'],['right','➡️','يمين']];
+  for(const [value,icon,label] of opts){const b=document.createElement('button');b.className='direction-btn';b.innerHTML=icon+'<small>'+label+'</small>';b.disabled=multiPenaltySubmittedKick===kick;b.onclick=()=>pickPenaltyDirection(value);$('penaltyDirections').appendChild(b)}
+  if(state.lastShot)message('multiGameMessage',(state.lastShot.goal?'هدف! ⚽':'تصدي! 🧤')+' — النتيجة '+hg+' : '+gg);
+  else message('multiGameMessage','كل لاعب يختار جهة واحدة. تُكشف نتيجة الركلة بعد اختيار الاثنين.');
+ }
+}
+async function playXoMove(index){
+ try{const db=await requireBackend();const {data,error}=await db.rpc('game_xo_move',{p_code:multiRoom.code,p_index:index});if(error)throw error;multiRoom=data;handleMultiRoomUpdate()}
+ catch(e){message('multiGameMessage',e.message||String(e))}
+}
+async function submitPlantAnswers(){
+ const answers={};for(const [key] of plantCategories)answers[key]=$('plant-'+key)?.value.trim()||'';
+ const btn=$('multiGameContent').querySelector('button');if(btn)btn.disabled=true;
+ try{const db=await requireBackend();const {data,error}=await db.rpc('game_plant_submit',{p_code:multiRoom.code,p_answers:answers});if(error)throw error;multiRoom=data;await refreshMultiRoom()}
+ catch(e){if(btn)btn.disabled=false;message('multiGameMessage','تعذر إرسال الإجابات: '+(e.message||e))}
+}
+async function nextPlantRound(){
+ try{const db=await requireBackend();const {data,error}=await db.rpc('game_plant_next',{p_code:multiRoom.code});if(error)throw error;multiRoom=data;await refreshMultiRoom()}
+ catch(e){message('multiGameMessage',e.message||String(e))}
+}
+async function pickPenaltyDirection(direction){
+ const kick=Number(multiRoom.state?.kick||0);multiPenaltySubmittedKick=kick;
+ $('multiGameContent').querySelectorAll('button').forEach(b=>b.disabled=true);
+ try{const db=await requireBackend();const {data,error}=await db.rpc('game_penalty_pick',{p_code:multiRoom.code,p_direction:direction});if(error)throw error;multiRoom=data;await refreshMultiRoom()}
+ catch(e){message('multiGameMessage','لم تُسجل الاختيار: '+(e.message||e))}
+}
+async function leaveMultiRoom(){
+ if(multiChannel&&backend){try{await backend.removeChannel(multiChannel)}catch{}}
+ multiChannel=null;multiRoom=null;multiPenaltySubmittedKick=-1;multiPlantResolving=false;show('home');
+}
+
+$('solo').onclick=startSolo;
+
+$('openXO').onclick=()=>openMultiLobby('xo');
+$('openPlant').onclick=()=>openMultiLobby('plant');
+$('openPenalty').onclick=()=>openMultiLobby('penalty');
+$('multiLobbyBack').onclick=leaveMultiRoom;
+$('multiGameHome').onclick=leaveMultiRoom;
+$('multiQuit').onclick=leaveMultiRoom;
+$('multiCreate').onclick=createMultiRoom;
+$('multiShowJoin').onclick=()=>{$('multiJoinPanel').classList.remove('hidden');$('multiRoomInput').focus()};
+$('multiJoin').onclick=joinMultiRoom;
+$('multiStart').onclick=startMultiGame;
+$('multiLeave').onclick=leaveMultiRoom;
+$('multiCopy').onclick=async()=>{try{await navigator.clipboard.writeText(multiRoom.code);message('multiMessage','تم نسخ الرمز.')}catch{message('multiMessage','انسخ الرمز: '+multiRoom.code)}};
+$('multiShare').onclick=async()=>{const text='انضم إلى '+multiGameNames[multiType]+'! رمز الغرفة: '+multiRoom.code;try{if(navigator.share)await navigator.share({title:'HEMA × Merve Games',text});else{await navigator.clipboard.writeText(text);message('multiMessage','تم نسخ رسالة الدعوة.')}}catch{}};
+$('create').onclick=()=>openLobby('create');$('join').onclick=()=>openLobby('join');$('how').onclick=()=>show('howScreen');
 $('settingsOpen').onclick=openSettings;$('settingsBack').onclick=()=>show('home');$('lobbyBack').onclick=()=>leaveRealtime(true);$('howBack').onclick=()=>show('home');
 $('createRoom').onclick=createRoom;$('joinRoom').onclick=joinRoom;$('startOnline').onclick=startOnline;
 $('copyCode').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);message('lobbyMessage','تم نسخ رمز الغرفة.')}catch{message('lobbyMessage','انسخ الرمز يدوياً: '+room.code)}};
