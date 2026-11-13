@@ -218,7 +218,7 @@ create or replace function public.game_plant_submit(p_code text, p_answers jsonb
 returns public.game_rooms
 language plpgsql security definer
 set search_path = pg_catalog, public, auth
-as $
+as $$
 declare
   v_user uuid:=auth.uid(); v_room public.game_rooms; v_count integer;
   v_key text; v_value text; v_clean jsonb:='{}'::jsonb; v_letter text; v_first text;
@@ -252,14 +252,14 @@ begin
   values(v_room.code,v_user,'round',jsonb_build_object('round',(v_room.state->>'round')::integer,'submitted',true));
   return v_room;
 end;
-$;
+$$;
 
 
 create or replace function public.game_plant_my_submission(p_code text)
 returns boolean
 language plpgsql security definer
 set search_path = pg_catalog, public, auth
-as $
+as $$
 declare v_user uuid:=auth.uid(); v_room public.game_rooms;
 begin
   if v_user is null then raise exception 'Sign in is required'; end if;
@@ -271,7 +271,7 @@ begin
     where room_code=v_room.code and round_no=(v_room.state->>'round')::integer and player_id=v_user
   );
 end;
-$;
+$$;
 
 create or replace function public.game_plant_resolve(p_code text)
 returns public.game_rooms
