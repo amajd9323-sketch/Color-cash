@@ -216,8 +216,10 @@ create or replace function public.game_plant_submit(p_code text, p_answers jsonb
 returns public.game_rooms
 language plpgsql security definer
 set search_path = pg_catalog, public, auth
-as $$
-declare v_user uuid := auth.uid(); v_room public.game_rooms; v_count integer;
+as $
+declare
+  v_user uuid:=auth.uid(); v_room public.game_rooms; v_count integer;
+  v_key text; v_value text; v_clean jsonb:='{}'::jsonb; v_letter text; v_first text;
 begin
   if v_user is null then raise exception 'Sign in is required'; end if;
   if jsonb_typeof(p_answers) <> 'object' or pg_column_size(p_answers) > 8192 then raise exception 'Invalid answers'; end if;
@@ -225,8 +227,19 @@ begin
   if not found or v_room.game_type <> 'plant' then raise exception 'Plant game room not found'; end if;
   if v_room.status <> 'playing' or v_room.state->>'phase' <> 'answer' then raise exception 'Round is not accepting answers'; end if;
   if v_user <> v_room.host_id and v_user <> v_room.guest_id then raise exception 'You are not a room member'; end if;
+
+  v_letter:=v_room.state->>'letter';
+  foreach v_key in array array['name','plant','animal','object','country'] loop
+    v_value:=btrim(coalesce(p_answers->>v_key,''));
+    v_first:=left(v_value,1);
+    if v_value<>'' and v_first<>v_letter and not (v_letter='أ' and v_first in ('ا','أ','إ','آ')) then
+      v_value:='';
+    end if;
+    v_clean:=v_clean||jsonb_build_object(v_key,v_value);
+  end loop;
+
   insert into public.game_plant_submissions(room_code,round_no,player_id,answers)
-  values(v_room.code,(v_room.state->>'round')::integer,v_user,p_answers);
+  values(v_room.code,(v_room.state->>'round')::integer,v_user,v_clean);
   select count(*) into v_count from public.game_plant_submissions
   where room_code=v_room.code and round_no=(v_room.state->>'round')::integer;
   update public.game_rooms
@@ -237,7 +250,7 @@ begin
   values(v_room.code,v_user,'round',jsonb_build_object('round',(v_room.state->>'round')::integer,'submitted',true));
   return v_room;
 end;
-$$;
+$;
 
 create or replace function public.game_plant_resolve(p_code text)
 returns public.game_rooms
