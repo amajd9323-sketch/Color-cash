@@ -61,6 +61,21 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Generate Color Clash launcher icons
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y librsvg2-bin
+          for item in "mdpi 48" "hdpi 72" "xhdpi 96" "xxhdpi 144" "xxxhdpi 192"; do
+            set -- $item
+            density="$1"
+            pixels="$2"
+            target="android/app/src/main/res/mipmap-$density"
+            mkdir -p "$target"
+            rsvg-convert -w "$pixels" -h "$pixels" icon.svg > "$target/ic_launcher.png"
+            cp "$target/ic_launcher.png" "$target/ic_launcher_round.png"
+            cp "$target/ic_launcher.png" "$target/ic_launcher_foreground.png"
+          done
+
       - name: Sync Android project
         run: npx cap sync android
 
