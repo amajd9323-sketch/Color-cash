@@ -74,8 +74,8 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
  <div class="panel">
   <div class="grid">
    <button class="mode" id="solo"><div class="emoji">🎯</div><h3>Solo Challenge</h3><p>10 rounds against the computer. Beat your best score.</p></button>
-   <button class="mode" id="create"><div class="emoji">⚔️</div><h3>إنشاء غرفة</h3><p>Create a private room and share the code with a friend.</p></button>
-   <button class="mode" id="join"><div class="emoji">🚪</div><h3>دخول غرفة</h3><p>Enter your friend’s room code and play together.</p></button>
+   <button class="mode" id="create"><div class="emoji">⚔️</div><h3>Create Room</h3><p>Create a private room and share the code with a friend.</p></button>
+   <button class="mode" id="join"><div class="emoji">🚪</div><h3>Join Room</h3><p>Enter your friend’s room code and play together.</p></button>
    <button class="mode" id="how"><div class="emoji">❔</div><h3>How to Play</h3><p>Learn the challenges and scoring rules.</p></button>
   </div>
   <div class="row" style="margin-top:18px"><span class="muted" id="best">Best Score: 0</span><span class="muted">10 rounds • 3 challenges</span></div>
@@ -96,9 +96,9 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 <section id="lobby" class="screen hidden">
  <div class="panel">
   <div class="row"><button class="secondary" id="lobbyBack">← Home</button><span class="pill">Online Room</span></div>
-  <h2 id="lobbyTitle">إنشاء غرفة</h2>
+  <h2 id="lobbyTitle">Create Room</h2>
   <label for="playerName">Player Name</label><input class="field" id="playerName" maxlength="18" placeholder="Enter your name">
-  <div id="createControls"><button class="primary" id="createRoom">إنشاء الغرفة</button></div>
+  <div id="createControls"><button class="primary" id="createRoom">Create Room</button></div>
   <div id="joinControls" class="hidden">
    <label for="roomInput">Room Code</label><input class="field" id="roomInput" maxlength="6" placeholder="ABC123" autocapitalize="characters">
    <button class="primary" id="joinRoom">Join Room</button>
@@ -109,7 +109,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
    <div class="note" style="margin-top:14px">
     <div class="row"><span>Host</span><strong id="hostName">—</strong></div>
     <div class="row"><span>Player 2</span><strong id="guestName">Waiting to join...</strong></div>
-    <p id="roomStatus" class="center">بانتظار Player 2...</p>
+    <p id="roomStatus" class="center">Waiting for Player 2...</p>
    </div>
    <div class="actions"><button class="primary" id="startOnline" disabled>Start Match</button><button class="danger" id="leaveRoom">Leave Room</button></div>
   </div>
@@ -140,7 +140,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
   <p>🎯 <b>Find the Color:</b> Find the odd tile among 25 squares.</p>
   <p>🎨 <b>Color Match:</b> Choose the exact matching color.</p>
   <p>🧠 <b>Memory:</b> Watch the color sequence, then repeat it in order.</p>
-  <p>لديك 20 ثانية لكل جولة. كلما أجبت أسرع زادت Your Points. في اللعب الجماعي تُحتسب النقاط على الخادم وتُزامن النتيجة مع اللاعب الآخر.</p>
+  <p>You have 20 seconds per round. Faster answers earn more points. In multiplayer, scores are calculated on the server and synced with your opponent.</p>
  </div>
 </section>
 
@@ -164,7 +164,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
   <h2 id="multiTitle">Friends Game</h2>
   <label for="multiPlayerName">Player Name</label><input class="field" id="multiPlayerName" maxlength="18" placeholder="Enter your name">
   <div class="grid">
-   <button class="primary" id="multiCreate">إنشاء غرفة</button>
+   <button class="primary" id="multiCreate">Create Room</button>
    <button class="secondary" id="multiShowJoin">Join with Code</button>
   </div>
   <div id="multiJoinPanel" class="hidden">
@@ -177,18 +177,18 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
    <div class="note" style="margin-top:14px">
     <div class="row"><span>Host</span><strong id="multiHost">—</strong></div>
     <div class="row"><span>Player 2</span><strong id="multiGuest">Waiting to join...</strong></div>
-    <p id="multiRoomStatus" class="center">بانتظار Player 2...</p>
+    <p id="multiRoomStatus" class="center">Waiting for Player 2...</p>
    </div>
    <div class="actions"><button class="primary" id="multiStart" disabled>Start Game</button><button class="danger" id="multiLeave">Leave Room</button></div>
   </div>
   <p class="statusline" id="multiMessage"></p>
-  <div class="note">كل لاعب يفتح Game على جهازه، ويدخل Room Code نفسه. الاتصال يتم عبر Supabase.</div>
+  <div class="note">Each player opens the game on their own device and enters the same room code. Supabase connects both players.</div>
  </div>
 </section>
 
 <section id="multiGame" class="screen hidden">
  <div class="panel">
-  <div class="row"><button class="secondary" id="multiQuit">Exit</button><span class="pill" id="multiRoomBadge">غرفة</span></div>
+  <div class="row"><button class="secondary" id="multiQuit">Exit</button><span class="pill" id="multiRoomBadge">Room</span></div>
   <h2 id="multiGameTitle" class="center">Game</h2>
   <div class="row" style="margin:12px 0">
    <div class="scorebox"><span id="multiYouName">You</span><strong id="multiYouScore">0</strong></div>
@@ -199,7 +199,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
   <div class="actions"><button class="secondary" id="multiGameHome">Home</button></div>
  </div>
 </section>
-<div class="foot credit-footer">COLOR CLASH • Play smart. Win with color!<br><strong>HEMA</strong> × <strong>Merve</strong> ❤️<br>صنع Game: HEMA — إهداء إلى Merve</div>
+<div class="foot credit-footer">COLOR CLASH • Play smart. Win with color!<br><strong>HEMA</strong> × <strong>Merve</strong> ❤️<br>Created by HEMA — A gift for Merve</div>
 </main>
 
 <script>
@@ -282,13 +282,13 @@ function finishSoloRound(correct,timedOut=false){
  const points=correct?Math.max(10,Math.round(100+remaining*8)):0;
  soloScore+=points;botScore+=rand(45)+20;updateScores(soloScore,botScore);
  $('gameContent').querySelectorAll('button').forEach(b=>b.disabled=true);
- message('feedback',timedOut?'Time is up!':correct?'Correct! +'+points+' points':'إجابة غير صحيحة، حاول في Round القادمة.');
+ message('feedback',timedOut?'Time is up!':correct?'Correct! +'+points+' points':'Incorrect answer. Try again next round.');
  $('nextRound').classList.remove('hidden');$('nextRound').onclick=()=>{soloRound++;renderSoloRound()};
 }
 function finishSolo(){
  stopTimer();localStorage.setItem('ccBest',String(Math.max(Number(localStorage.getItem('ccBest')||0),soloScore)));setBest();
- $('finalScore').textContent=soloScore;$('resultTitle').textContent=soloScore>=botScore?'فزت على Computer!':'Computer فاز هذه المرة';
- $('resultRows').innerHTML='<p>Your Score: <b>'+soloScore+'</b></p><p>نتيجة Computer: <b>'+botScore+'</b></p>';show('result');
+ $('finalScore').textContent=soloScore;$('resultTitle').textContent=soloScore>=botScore?'You beat the computer!':'The computer won this time';
+ $('resultRows').innerHTML='<p>Your Score: <b>'+soloScore+'</b></p><p>Computer score: <b>'+botScore+'</b></p>';show('result');
 }
 
 function getConfig(){try{return JSON.parse(localStorage.getItem('ccSupabase')||'null')||DEFAULT_SUPABASE_CONFIG}catch{return DEFAULT_SUPABASE_CONFIG}}
@@ -313,7 +313,7 @@ function makeRoomCode(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Ar
 function playerName(){const name=($('playerName').value||localPlayerName||'Player').trim().slice(0,18)||'Player';localPlayerName=name;localStorage.setItem('ccPlayerName',name);return name}
 function openLobby(kind){
  if(room)leaveRealtime(false);
- gameMode='online';$('lobbyTitle').textContent=kind==='create'?'إنشاء غرفة':'دخول غرفة';
+ gameMode='online';$('lobbyTitle').textContent=kind==='create'?'Create Room':'Join Room';
  $('createControls').classList.toggle('hidden',kind!=='create');$('joinControls').classList.toggle('hidden',kind!=='join');$('roomInfo').classList.add('hidden');
  $('playerName').value=localPlayerName;$('roomInput').value='';message('lobbyMessage','');show('lobby');
 }
@@ -329,7 +329,7 @@ async function joinRoom(){
  const btn=$('joinRoom');btn.disabled=true;message('lobbyMessage','Searching for room...');
  try{
   const db=await requireBackend();const code=$('roomInput').value.trim().toUpperCase();
-  if(!/^[A-Z0-9]{6}$/.test(code))throw new Error('Room Code يجب أن يتكون من 6 أحرف أو أرقام.');
+  if(!/^[A-Z0-9]{6}$/.test(code))throw new Error('Room code must contain 6 letters or numbers.');
   const {data,error}=await db.rpc('cc_join_room',{p_code:code,p_name:playerName()});if(error)throw error;
   room=data;await joinRealtime(code);$('createControls').classList.add('hidden');$('joinControls').classList.add('hidden');$('roomInfo').classList.remove('hidden');renderLobby();
  }catch(e){message('lobbyMessage','Could not join room: '+(e.message||e))}finally{btn.disabled=false}
@@ -351,7 +351,7 @@ function renderLobby(){
  if(!room)return;
  $('roomCode').textContent=room.code;$('hostName').textContent=room.host_name||'—';$('guestName').textContent=room.guest_name||'Waiting to join...';
  $('startOnline').classList.toggle('hidden',!isHost());$('startOnline').disabled=!(isHost()&&room.guest_id&&room.status==='waiting');
- $('roomStatus').textContent=room.status==='waiting'?(room.guest_id?'اللاعبان جاهزان. Host يستطيع بدء المباراة.':'بانتظار انضمام Player 2...'):'Room status: '+room.status;
+ $('roomStatus').textContent=room.status==='waiting'?(room.guest_id?'Both players are ready. The host can start the match.':'Waiting for Player 2 to join...'):'Room status: '+room.status;
 }
 function handleRoomUpdate(){
  if(!room)return;
@@ -382,7 +382,7 @@ async function submitMulti(answer){
  try{
   const db=await requireBackend();const {data,error}=await db.rpc('cc_submit_answer',{p_code:room.code,p_answer:String(answer),p_elapsed_ms:spent});if(error)throw error;
   await refreshRoom();
-  if(room?.status==='playing'&&room.round===submittedRound)message('feedback',data?.correct?'Correct! +'+data.points+' points. ننتظر اللاعب الآخر.':'Answer locked. Waiting for the other player.');
+  if(room?.status==='playing'&&room.round===submittedRound)message('feedback',data?.correct?'Correct! +'+data.points+' points. Waiting for the other player.':'Answer locked. Waiting for the other player.');
  }catch(e){multiSubmitted=false;message('feedback','Could not submit answer: '+(e.message||e));}
 }
 function showOnlineResult(){
@@ -466,7 +466,7 @@ function renderMultiLobby(){
  $('multiGuest').textContent=multiRoom.guest_name||'Waiting to join...';
  $('multiStart').classList.toggle('hidden',!multiIsHost());
  $('multiStart').disabled=!(multiIsHost()&&multiRoom.guest_id&&multiRoom.status==='waiting');
- $('multiRoomStatus').textContent=multiRoom.status==='waiting'?(multiRoom.guest_id?'اللاعبان جاهزان! Host يبدأ اللعب.':'Share the code with your friend and wait for them to join.'):'Match started.';
+ $('multiRoomStatus').textContent=multiRoom.status==='waiting'?(multiRoom.guest_id?'Both players are ready! The host can start.':'Share the code with your friend and wait for them to join.'):'Match started.';
 }
 function handleMultiRoomUpdate(){
  if(!multiRoom)return;
@@ -483,7 +483,7 @@ async function startMultiGame(){
  try{
   const db=await requireBackend();const {data,error}=await db.rpc('game_publish_state',{p_code:multiRoom.code,p_event_type:'start',p_payload:{game:multiType},p_state:state,p_status:'playing'});
   if(error)throw error;multiRoom=data;handleMultiRoomUpdate();
- }catch(e){message('multiMessage','تعذر بدء Game: '+(e.message||e));btn.disabled=false}
+ }catch(e){message('multiMessage','Could not start game: '+(e.message||e));btn.disabled=false}
 }
 function multiNames(){
  const host=multiRoom.host_name,guest=multiRoom.guest_name;
@@ -511,7 +511,7 @@ async function renderMultiGame(){
   if(multiRoom.status==='finished'){
    const result=state.draw?'It’s a draw!':state.winner===currentUser?.id?'You won! 🎉':'Match over. Your friend won.';
    message('multiGameMessage',result+' — '+multiRoom.host_name+' (X) vs. '+multiRoom.guest_name+' (O)');
-  }else message('multiGameMessage',state.turn===currentUser?.id?'Your turn! اختر مربعاً.':'Turn: '+(state.turn===multiRoom.host_id?multiRoom.host_name:multiRoom.guest_name)+'. Please wait.');
+  }else message('multiGameMessage',state.turn===currentUser?.id?'Your turn! Choose a square.':'Turn: '+(state.turn===multiRoom.host_id?multiRoom.host_name:multiRoom.guest_name)+'. Please wait.');
   return;
  }
  if(multiType==='plant'){
@@ -531,21 +531,21 @@ async function renderMultiGame(){
    const hostAnswers=(answerRows||[]).find(x=>x.player_id===multiRoom.host_id)?.answers||{};
    const guestAnswers=(answerRows||[]).find(x=>x.player_id===multiRoom.guest_id)?.answers||{};
    const rows=plantCategories.map(([key,label])=>'<div class="row"><span>'+label+'</span><b>'+escapeText(hostAnswers[key]||'—')+'</b><b>'+escapeText(guestAnswers[key]||'—')+'</b></div>').join('');
-   $('multiGameContent').innerHTML='<div class="center"><div class="eyebrow">ROUND '+state.round+' / 3</div><h2>Round Results</h2><p>Round letter: <b>'+escapeText(state.letter)+'</b></p><div class="row"><div class="scorebox">Your Points<strong>+'+myPts+'</strong></div><div class="scorebox">نقاط Opponent<strong>+'+opPts+'</strong></div></div></div><hr><div class="row muted"><span>Category</span><b>'+escapeText(multiRoom.host_name)+'</b><b>'+escapeText(multiRoom.guest_name)+'</b></div>'+rows;
-   const next=document.createElement('button');next.className='primary';next.textContent=state.round>=3?'Show Final Results':'Round التالية';next.onclick=nextPlantRound;
+   $('multiGameContent').innerHTML='<div class="center"><div class="eyebrow">ROUND '+state.round+' / 3</div><h2>Round Results</h2><p>Round letter: <b>'+escapeText(state.letter)+'</b></p><div class="row"><div class="scorebox">Your Points<strong>+'+myPts+'</strong></div><div class="scorebox">Opponent Points<strong>+'+opPts+'</strong></div></div></div><hr><div class="row muted"><span>Category</span><b>'+escapeText(multiRoom.host_name)+'</b><b>'+escapeText(multiRoom.guest_name)+'</b></div>'+rows;
+   const next=document.createElement('button');next.className='primary';next.textContent=state.round>=3?'Show Final Results':'Next Round';next.onclick=nextPlantRound;
    $('multiGameContent').appendChild(next);
    message('multiGameMessage','Answers must start with the round letter. Matching answers earn 5 points each; different valid answers earn 10.');
    return;
   }
   if(state.phase==='finished'){
-   $('multiGameContent').innerHTML='<h2 class="center">انتهت Game! 🏆</h2>';
+   $('multiGameContent').innerHTML='<h2 class="center">Game Over! 🏆</h2>';
    const my=meHost?scores.host:scores.guest,op=meHost?scores.guest:scores.host;
    message('multiGameMessage',my>op?'You won! 🎉':my<op?'Your friend won!':'It’s a draw!');return;
   }
   const db=await requireBackend();
   const {data:mine,error}=await db.rpc('game_plant_my_submission',{p_code:multiRoom.code});
   if(error)throw error;
-  $('multiGameContent').innerHTML='<div class="center"><div class="eyebrow">ROUND '+state.round+' / 3</div><h2>الحرف: <span style="color:var(--cyan);font-size:36px">'+escapeText(state.letter)+'</span></h2><p class="muted">Enter answers that start with the shown letter, then submit.</p></div>';
+  $('multiGameContent').innerHTML='<div class="center"><div class="eyebrow">ROUND '+state.round+' / 3</div><h2>Letter: <span style="color:var(--cyan);font-size:36px">'+escapeText(state.letter)+'</span></h2><p class="muted">Enter answers that start with the shown letter, then submit.</p></div>';
   if(mine){
    $('multiGameContent').insertAdjacentHTML('beforeend','<div class="multi-status">Your answers were submitted. Waiting for the other player...</div>');
    message('multiGameMessage','Answers submitted. Keep the room open.');
@@ -563,12 +563,12 @@ async function renderMultiGame(){
   multiUpdateScore(meHost?hg:gg,meHost?gg:hg,names.me,names.op);
   const kick=Number(state.kick||0);
   if(multiRoom.status==='finished'){
-   $('multiGameContent').innerHTML='<div class="center"><div style="font-size:55px">🏆</div><h2>انتهت Penalty Shootout</h2><div class="row"><div class="scorebox">'+escapeText(multiRoom.host_name)+'<strong>'+hg+'</strong></div><div class="scorebox">'+escapeText(multiRoom.guest_name)+'<strong>'+gg+'</strong></div></div></div>';
-   message('multiGameMessage',hg===gg?'It’s a draw!':(meHost?hg>gg:gg>hg)?'فزت بPenalty Shootout! 🎉':'فاز صديقك بPenalty Shootout.');
+   $('multiGameContent').innerHTML='<div class="center"><div style="font-size:55px">🏆</div><h2>Penalty Shootout Complete</h2><div class="row"><div class="scorebox">'+escapeText(multiRoom.host_name)+'<strong>'+hg+'</strong></div><div class="scorebox">'+escapeText(multiRoom.guest_name)+'<strong>'+gg+'</strong></div></div></div>';
+   message('multiGameMessage',hg===gg?'It’s a draw!':(meHost?hg>gg:gg>hg)?'You won the shootout! 🎉':'Your friend won the shootout.');
    return;
   }
   const shooter=kick%2===0?multiRoom.host_id:multiRoom.guest_id;
-  const myRole=currentUser.id===shooter?'You المسدّد ⚽':'You الحارس 🧤';
+  const myRole=currentUser.id===shooter?'You are shooting ⚽':'You are the goalkeeper 🧤';
   $('multiGameContent').innerHTML='<div class="center"><div class="eyebrow">KICK '+(kick+1)+' / 10</div><h2>'+myRole+'</h2><p class="muted">'+(currentUser.id===shooter?'Choose where to shoot.':'Guess the shot direction and make the save.')+'</p><div class="direction-grid" id="penaltyDirections"></div></div>';
   const opts=[['left','⬅️','Left'],['center','⬆️','Center'],['right','➡️','Right']];
   for(const [value,icon,label] of opts){const b=document.createElement('button');b.className='direction-btn';b.innerHTML=icon+'<small>'+label+'</small>';b.disabled=multiPenaltySubmittedKick===kick;b.onclick=()=>pickPenaltyDirection(value);$('penaltyDirections').appendChild(b)}
@@ -584,7 +584,7 @@ async function submitPlantAnswers(){
  const answers={};for(const [key] of plantCategories)answers[key]=$('plant-'+key)?.value.trim()||'';
  const btn=$('multiGameContent').querySelector('button');if(btn)btn.disabled=true;
  try{const db=await requireBackend();const {data,error}=await db.rpc('game_plant_submit',{p_code:multiRoom.code,p_answers:answers});if(error)throw error;multiRoom=data;await refreshMultiRoom()}
- catch(e){if(btn)btn.disabled=false;message('multiGameMessage','تعذر Submit Answers: '+(e.message||e))}
+ catch(e){if(btn)btn.disabled=false;message('multiGameMessage','Could not submit answers: '+(e.message||e))}
 }
 async function nextPlantRound(){
  try{const db=await requireBackend();const {data,error}=await db.rpc('game_plant_next',{p_code:multiRoom.code});if(error)throw error;multiRoom=data;await refreshMultiRoom()}
@@ -614,13 +614,13 @@ $('multiShowJoin').onclick=()=>{$('multiJoinPanel').classList.remove('hidden');$
 $('multiJoin').onclick=joinMultiRoom;
 $('multiStart').onclick=startMultiGame;
 $('multiLeave').onclick=leaveMultiRoom;
-$('multiCopy').onclick=async()=>{try{await navigator.clipboard.writeText(multiRoom.code);message('multiMessage','تم Copy Code.')}catch{message('multiMessage','اCopy Code: '+multiRoom.code)}};
+$('multiCopy').onclick=async()=>{try{await navigator.clipboard.writeText(multiRoom.code);message('multiMessage','Code copied.')}catch{message('multiMessage','Copy this code: '+multiRoom.code)}};
 $('multiShare').onclick=async()=>{const text='Join '+multiGameNames[multiType]+'! Room Code: '+multiRoom.code;try{if(navigator.share)await navigator.share({title:'HEMA × Merve Games',text});else{await navigator.clipboard.writeText(text);message('multiMessage','Invite message copied.')}}catch{}};
 $('create').onclick=()=>openLobby('create');$('join').onclick=()=>openLobby('join');$('how').onclick=()=>show('howScreen');
 $('settingsOpen').onclick=openSettings;$('settingsBack').onclick=()=>show('home');$('lobbyBack').onclick=()=>leaveRealtime(true);$('howBack').onclick=()=>show('home');
 $('createRoom').onclick=createRoom;$('joinRoom').onclick=joinRoom;$('startOnline').onclick=startOnline;
-$('copyCode').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);message('lobbyMessage','تم نسخ Room Code.')}catch{message('lobbyMessage','اCopy Code يدوياً: '+room.code)}};
-$('shareCode').onclick=async()=>{const text='Join مباراتي في Color Clash. Room Code: '+room.code;try{if(navigator.share)await navigator.share({title:'Color Clash',text});else{await navigator.clipboard.writeText(text);message('lobbyMessage','تم نسخ رسالة الShare.')}}catch{}};
+$('copyCode').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);message('lobbyMessage','Room code copied.')}catch{message('lobbyMessage','Copy the code manually: '+room.code)}};
+$('shareCode').onclick=async()=>{const text='Join my Color Clash match. Room code: '+room.code;try{if(navigator.share)await navigator.share({title:'Color Clash',text});else{await navigator.clipboard.writeText(text);message('lobbyMessage','Share message copied.')}}catch{}};
 $('leaveRoom').onclick=()=>leaveRealtime(true);$('quitGame').onclick=()=>{if(gameMode==='online')leaveRealtime(true);else{stopTimer();show('home')}};
 $('nextRound').onclick=()=>{};$('playAgain').onclick=()=>{if(gameMode==='solo')startSolo();else show('home')};$('resultHome').onclick=()=>leaveRealtime(true);
 $('saveSettings').onclick=saveSettings;$('clearSettings').onclick=()=>{localStorage.removeItem('ccSupabase');backend=null;currentUser=null;$('supabaseUrl').value='';$('supabaseKey').value='';setConnection('Solo mode available');message('settingsMessage','Connection settings cleared.')};
