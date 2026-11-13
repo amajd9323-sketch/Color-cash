@@ -61,6 +61,9 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Sync Android project
+        run: npx cap sync android
+
       - name: Generate Color Clash launcher icons
         run: |
           sudo apt-get update
@@ -75,9 +78,6 @@ jobs:
             cp "$target/ic_launcher.png" "$target/ic_launcher_round.png"
             cp "$target/ic_launcher.png" "$target/ic_launcher_foreground.png"
           done
-
-      - name: Sync Android project
-        run: npx cap sync android
 
       - name: Build debug APK
         working-directory: android
