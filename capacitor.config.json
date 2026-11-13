@@ -1,0 +1,9 @@
+{
+  "appId": "com.hemagames.colorclash",
+  "appName": "Color Clash",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "android": {
+    "backgroundColor": "#090b16"
+  }
+}
