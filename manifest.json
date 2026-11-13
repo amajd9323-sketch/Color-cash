@@ -1,7 +1,7 @@
 {
   "name": "Color Clash — HEMA × Merve",
-  "short_name": "HEMA Games",
-  "description": "ألعاب أونلاين من HEMA كهدية إلى Merve",
+  "short_name": "Color Clash",
+  "description": "English online multiplayer games created by HEMA as a gift for Merve.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
