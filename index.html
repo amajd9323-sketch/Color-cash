@@ -4,16 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090b16">
-<meta name="description" content="Color Clash — Online games created by HEMA for Merve">
+<meta name="description" content="Color Clash — fast color challenges and online multiplayer rooms.">
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
-<title>Color Clash | HEMA × Merve</title>
+<title>Color Clash</title>
 <style>
 :root{color-scheme:dark;--bg:#090b16;--panel:#141a2d;--line:#2a3551;--cyan:#45e6ff;--pink:#ff4fa3;--purple:#9b7bff;--green:#55efad;--muted:#9aa4c4}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% 0,#24204b,transparent 40%),var(--bg);color:#f4f6ff;font-family:system-ui,Arial,sans-serif;min-height:100vh}
 button,input{font:inherit}button{cursor:pointer;border:0;color:inherit;touch-action:manipulation}button:disabled{cursor:not-allowed;opacity:.55}
 .wrap{max-width:780px;margin:auto;padding:16px 15px 42px}.top,.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.top{min-height:45px}
-.brand{font-size:22px;font-weight:950;letter-spacing:.4px}.brand b{color:var(--cyan)}
+.brand{display:flex;align-items:center;gap:9px;font-size:22px;font-weight:950;letter-spacing:.4px}.brand b{color:var(--cyan)}
+.brand-mark{width:42px;height:42px;border-radius:11px;object-fit:cover;border:1px solid #6476bd66;box-shadow:0 0 20px #426bff35}
+.hero-logo{display:block;width:min(100%,390px);height:auto;aspect-ratio:1/1;object-fit:contain;margin:-8px auto 4px;filter:drop-shadow(0 12px 28px #1b57ff55)}
+.multi-title,.game-card,.creator-credit,#multiLobby,#multiGame{display:none!important}
+#home .multi-title + p,#home .multi-title + p + .grid{display:none!important}
 .pill{border:1px solid var(--line);border-radius:99px;padding:8px 12px;color:#c3cbe2;background:#11162acc;font-size:12px}
 .hero{text-align:center;margin:26px auto 22px}.eyebrow{color:var(--cyan);font-size:11px;letter-spacing:3px;font-weight:900}
 .hero h1{font-size:clamp(40px,10vw,68px);margin:8px 0;background:linear-gradient(90deg,#fff,var(--cyan),#b28cff);background-clip:text;color:transparent;line-height:1.12}
@@ -65,12 +69,12 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 <body>
 <main class="wrap">
 <header class="top">
- <div class="brand">▦ <b>COLOR</b> CLASH</div>
+ <div class="brand"><img class="brand-mark" src="./icon.svg" alt="Color Clash"><span>COLOR <b>CLASH</b></span></div>
  <div class="row"><span class="pill" id="connection">● Solo mode available</span><button class="pill" id="settingsOpen" type="button">⚙ Settings</button></div>
 </header>
 
 <section id="home">
- <div class="hero"><div class="eyebrow">SEE IT • FIND IT • WIN IT</div><h1>COLOR CLASH</h1><p>Test your speed and memory. Play solo or challenge a friend!</p></div>
+ <div class="hero"><img class="hero-logo" src="./icon.svg" alt="Color Clash logo"><div class="eyebrow">SEE IT • FIND IT • WIN IT</div><p>Test your speed and memory. Play solo or challenge a friend!</p></div>
  <div class="panel">
   <div class="grid">
    <button class="mode" id="solo"><div class="emoji">🎯</div><h3>Solo Challenge</h3><p>10 rounds against the computer. Beat your best score.</p></button>
