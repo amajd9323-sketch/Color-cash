@@ -64,39 +64,26 @@ jobs:
       - name: Sync Android project
         run: npx cap sync android
 
-      - name: Generate real Color Clash launcher icons
+      - name: Generate Color Clash launcher icons
         run: |
           sudo apt-get update
-          sudo apt-get install -y imagemagick
-
-          # icon.svg contains the artwork as an embedded JPEG. Extract it first;
-          # rendering this SVG directly with librsvg made transparent/blank icons.
-          python - <<'PY'
-          import base64, re
-          from pathlib import Path
-          svg = Path("icon.svg").read_text(encoding="utf-8")
-          match = re.search(r"data:image/jpeg;base64,([^\\\"]+)", svg)
-          if not match:
-              raise SystemExit("Color Clash logo image was not found inside icon.svg")
-          image = base64.b64decode(match.group(1), validate=True)
-          if not image.startswith(b"\\xff\\xd8") or not image.endswith(b"\\xff\\xd9"):
-              raise SystemExit("Embedded Color Clash logo is not a valid JPEG")
-          Path("color-clash-launcher.jpg").write_bytes(image)
-          print(f"Extracted Color Clash logo: {len(image)} bytes")
-          PY
+          sudo apt-get install -y librsvg2-bin imagemagick
 
           mkdir -p android/app/src/main/res/values
           mkdir -p android/app/src/main/res/mipmap-anydpi-v26
 
+          # Render the pure vector SVG as actual PNG launcher resources.
           for item in "mdpi 48" "hdpi 72" "xhdpi 96" "xxhdpi 144" "xxxhdpi 192"; do
             set -- $item
             density="$1"
             pixels="$2"
             target="android/app/src/main/res/mipmap-$density"
             mkdir -p "$target"
-            convert color-clash-launcher.jpg -resize "${pixels}x${pixels}!" -strip "PNG32:$target/ic_launcher.png"
-            convert color-clash-launcher.jpg -resize "${pixels}x${pixels}!" -strip "PNG32:$target/ic_launcher_round.png"
-            convert color-clash-launcher.jpg -resize "${pixels}x${pixels}!" -strip "PNG32:$target/ic_launcher_foreground.png"
+            rsvg-convert -w "$pixels" -h "$pixels" icon.svg > "$target/ic_launcher.png"
+            cp "$target/ic_launcher.png" "$target/ic_launcher_round.png"
+            # A larger foreground resource is used by Android adaptive icons.
+            foreground_pixels=$((pixels * 3 / 2))
+            rsvg-convert -w "$foreground_pixels" -h "$foreground_pixels" icon.svg > "$target/ic_launcher_foreground.png"
           done
 
           cat > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml <<'XML'
@@ -115,7 +102,7 @@ jobs:
           </resources>
           XML
 
-          # Fail the build instead of publishing an APK with blank or missing icons.
+          # Verify PNG dimensions, decoding, and non-empty pixels before Gradle.
           identify android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
           test "$(stat -c%s android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png)" -gt 5000
           test "$(stat -c%s android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png)" -gt 5000
