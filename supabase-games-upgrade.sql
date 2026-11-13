@@ -68,7 +68,9 @@ create policy "game members can read plant submissions" on public.game_plant_sub
 for select to authenticated
 using (exists (
   select 1 from public.game_rooms r
-  where r.code = room_code and (auth.uid() = r.host_id or auth.uid() = r.guest_id)
+  where r.code = room_code
+    and (auth.uid() = r.host_id or auth.uid() = r.guest_id)
+    and r.state->>'phase' in ('review','results','finished')
 ));
 
 revoke all on public.game_rooms from anon, authenticated;
@@ -252,6 +254,25 @@ begin
 end;
 $;
 
+
+create or replace function public.game_plant_my_submission(p_code text)
+returns boolean
+language plpgsql security definer
+set search_path = pg_catalog, public, auth
+as $
+declare v_user uuid:=auth.uid(); v_room public.game_rooms;
+begin
+  if v_user is null then raise exception 'Sign in is required'; end if;
+  select * into v_room from public.game_rooms where code=upper(trim(p_code));
+  if not found or v_room.game_type<>'plant' then raise exception 'Plant room not found'; end if;
+  if v_user<>v_room.host_id and v_user<>v_room.guest_id then raise exception 'You are not a room member'; end if;
+  return exists(
+    select 1 from public.game_plant_submissions
+    where room_code=v_room.code and round_no=(v_room.state->>'round')::integer and player_id=v_user
+  );
+end;
+$;
+
 create or replace function public.game_plant_resolve(p_code text)
 returns public.game_rooms
 language plpgsql security definer
@@ -383,6 +404,8 @@ revoke all on function public.game_join_room(text,text) from public;
 revoke all on function public.game_publish_state(text,text,jsonb,jsonb,text) from public;
 revoke all on function public.game_xo_move(text,integer) from public;
 revoke all on function public.game_plant_submit(text,jsonb) from public;
+revoke all on function public.game_plant_my_submission(text) from public;
+grant execute on function public.game_plant_my_submission(text) to anon, authenticated;
 revoke all on function public.game_plant_resolve(text) from public;
 revoke all on function public.game_plant_next(text) from public;
 revoke all on function public.game_penalty_pick(text,text) from public;
