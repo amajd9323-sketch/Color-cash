@@ -76,8 +76,29 @@ jobs:
             mkdir -p "$target"
             rsvg-convert -w "$pixels" -h "$pixels" icon.svg > "$target/ic_launcher.png"
             cp "$target/ic_launcher.png" "$target/ic_launcher_round.png"
-            cp "$target/ic_launcher.png" "$target/ic_launcher_foreground.png"
           done
+
+          # Android 8+ adaptive launcher icon: use the supplied Color Clash artwork.
+          mkdir -p android/app/src/main/res/mipmap-anydpi-v26
+          mkdir -p android/app/src/main/res/values
+          rsvg-convert -w 432 -h 432 icon.svg > android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png
+          cat > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@color/color_clash_launcher_background"/>
+              <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+          </adaptive-icon>
+          XML
+          cat > android/app/src/main/res/values/color_clash_launcher.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <color name="color_clash_launcher_background">#090B16</color>
+          </resources>
+          XML
+          # Verify both legacy and adaptive launcher assets exist before Gradle build.
+          test -s android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          test -s android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png
+          test -s android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
 
       - name: Build debug APK
         working-directory: android
