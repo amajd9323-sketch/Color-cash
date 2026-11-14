@@ -176,7 +176,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
   <div class="actions powerup-bar hidden" id="powerupBar">
    <button class="secondary" id="powerExtra">⏱ +5s</button><button class="secondary" id="powerReveal">🔎 Hint</button><button class="secondary" id="powerFreeze">❄️ Freeze</button>
   </div>
-  <p id="powerupInfo" class="center muted" style="font-size:12px">2 power-ups per set • one per round • using one costs 25% of this round’s points</p>
+  <p id="powerupInfo" class="center muted hidden" style="font-size:12px">2 power-ups per set • one per round • using one costs 25% of this round’s points</p>
   <div class="actions reaction-bar" id="reactionBar"><button class="secondary" data-reaction="🔥">🔥</button><button class="secondary" data-reaction="😂">😂</button><button class="secondary" data-reaction="👏">👏</button><button class="secondary" data-reaction="😈">😈</button><button class="secondary" data-reaction="😎">😎</button></div>
   <p id="reactionNotice" class="center statusline"></p>
   <h3 id="modeLabel" class="center"></h3><p id="hint" class="center muted"></p>
@@ -552,6 +552,7 @@ function handleRoomUpdate(){
  if(!room)return;
  if(room.status==='waiting'){show('lobby');renderLobby();return}
  if(room.status==='playing'){
+  $('powerupBar').classList.remove('hidden');$('powerupInfo').classList.remove('hidden');
   show('game');$('progress').style.width=(room.round*10)+'%';handleRoomLabels();
   const meHost=isHost();
   updateScores(meHost?room.host_score:room.guest_score,meHost?room.guest_score:room.host_score);
@@ -581,7 +582,7 @@ async function submitMulti(answer){
  }catch(e){multiSubmitted=false;message('feedback','Could not submit answer: '+(e.message||e));}
 }
 function showOnlineResult(){
- stopTimer();playFx((isHost()?room.host_score>room.guest_score:room.guest_score>room.host_score)?'win':'lose');vibrate([50,30,70]);
+ stopTimer();loadMatchHistory().catch(e=>console.warn('Match history:',e.message));playFx((isHost()?room.host_score>room.guest_score:room.guest_score>room.host_score)?'win':'lose');vibrate([50,30,70]);
  const meHost=isHost(),my=meHost?room.host_score:room.guest_score,op=meHost?room.guest_score:room.host_score;
  const myWins=meHost?Number(room.host_wins||0):Number(room.guest_wins||0);
  const opWins=meHost?Number(room.guest_wins||0):Number(room.host_wins||0);
