@@ -331,27 +331,38 @@ function startTimer(onTimeout,seconds=30){
 }
 function setBest(){$('best').textContent=tr('bestScore')+': '+(Number(localStorage.getItem('ccBest')||0))}
 function currentDifficulty(){return $('difficultySelect')?.value||localStorage.getItem('ccDifficulty')||'normal'}
+function closeColor(hex){
+ const n=parseInt(hex.slice(1),16),r=(n>>16)&255,g=(n>>8)&255,bl=n&255;
+ return '#'+[Math.min(255,r+14),Math.max(0,g-10),Math.min(255,bl+12)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
 function makeDeck(difficulty=currentDifficulty(),count=10){
- const presets={
-  relaxed:{seconds:35,side:4,options:4,palette:4,sequence:3},
-  normal:{seconds:30,side:5,options:4,palette:5,sequence:5},
-  hard:{seconds:25,side:6,options:6,palette:6,sequence:7},
-  extreme:{seconds:20,side:7,options:8,palette:8,sequence:9}
- };
+ const presets={relaxed:{seconds:35,side:4,options:4,palette:4,sequence:3},normal:{seconds:30,side:5,options:4,palette:5,sequence:5},hard:{seconds:25,side:6,options:6,palette:6,sequence:7},extreme:{seconds:20,side:7,options:8,palette:8,sequence:9}};
  const cfg=presets[difficulty]||presets.normal,deck=[],answers=[];
  for(let r=0;r<count;r++){
   const type=r%3;
   if(type===0){
    const base=pick(colors);let diff=pick(colors);while(diff===base)diff=pick(colors);
-   const total=cfg.side*cfg.side,answer=rand(total),tiles=Array.from({length:total},(_,i)=>i===answer?diff:base);
-   deck.push({type:'find',tiles,boardSide:cfg.side,timeLimit:cfg.seconds,difficulty});answers.push(String(answer));
+   const total=cfg.side*cfg.side;
+   if(r===6){
+    const indexes=shuffle(Array.from({length:total},(_,i)=>i)).slice(0,2).sort((x,y)=>x-y);
+    const tiles=Array.from({length:total},(_,i)=>indexes.includes(i)?diff:base);
+    deck.push({type:'find',tiles,boardSide:cfg.side,timeLimit:cfg.seconds,difficulty,special:'double'});
+    answers.push(indexes.join(','));
+   }else{
+    const answer=rand(total),tiles=Array.from({length:total},(_,i)=>i===answer?diff:base);
+    deck.push({type:'find',tiles,boardSide:cfg.side,timeLimit:cfg.seconds,difficulty});answers.push(String(answer));
+   }
   }else if(type===1){
-   const target=pick(colors),opts=[target];
-   while(opts.length<cfg.options){const c=pick(colors);if(!opts.includes(c))opts.push(c)}
-   const options=shuffle(opts);deck.push({type:'match',target,options,timeLimit:cfg.seconds,difficulty});answers.push(target);
+   const target=pick(colors),close=closeColor(target),opts=[close];
+   while(opts.length<cfg.options){const c=pick(colors);if(!opts.includes(c)&&c!==target)opts.push(c)}
+   const options=shuffle(opts);
+   if(r===4||r===10){deck.push({type:'match',target,options,correctColor:close,close:true,timeLimit:cfg.seconds,difficulty,special:'close'});answers.push(close)}
+   else{const standard=[target];while(standard.length<cfg.options){const c=pick(colors);if(!standard.includes(c))standard.push(c)}const choices=shuffle(standard);deck.push({type:'match',target,options:choices,timeLimit:cfg.seconds,difficulty});answers.push(target)}
   }else{
    const palette=colors.slice(0,cfg.palette),sequence=Array.from({length:cfg.sequence},()=>rand(cfg.palette));
-   deck.push({type:'memory',palette,sequence,timeLimit:cfg.seconds,difficulty});answers.push(sequence.join(','));
+   const reverse=r===5||r===11;
+   deck.push({type:'memory',palette,sequence,timeLimit:cfg.seconds,difficulty,special:reverse?'reverse':null,reverse});
+   answers.push((reverse?[...sequence].reverse():sequence).join(','));
   }
  }
  return {deck,answers};
@@ -361,26 +372,33 @@ function localizeChallenge(challenge){
  $('hint').textContent=challenge.type==='find'?tr('findHint'):challenge.type==='match'?tr('matchHint'):tr('memoryHint');
 }
 function renderChallenge(challenge,submit){
- roundLocked=false;memoryInput=[];$('gameContent').innerHTML='';$('nextRound').classList.add('hidden');message('feedback','');
+ roundLocked=false;memoryInput=[];currentChallenge=challenge;$('gameContent').innerHTML='';$('nextRound').classList.add('hidden');message('feedback','');message('reactionNotice','');
  localizeChallenge(challenge);
+ if(challenge.special==='double')$('hint').textContent=tr('doubleHint');
+ if(challenge.special==='reverse')$('hint').textContent=tr('reverseHint');
+ if(challenge.special==='close')$('hint').textContent=tr('closeHint');
  if(challenge.type==='find'){
   const grid=document.createElement('div');grid.className='tiles';grid.style.gridTemplateColumns='repeat('+(challenge.boardSide||5)+',minmax(0,1fr))';grid.style.maxWidth='560px';grid.style.margin='16px auto';
-  challenge.tiles.forEach((color,i)=>{const b=document.createElement('button');b.className='tile';b.style.background=color;b.setAttribute('aria-label','Tile '+(i+1));b.onclick=()=>submit(String(i));grid.appendChild(b)});$('gameContent').appendChild(grid);
+  const selected=[];
+  challenge.tiles.forEach((color,i)=>{const btn=document.createElement('button');btn.className='tile';btn.style.background=color;btn.setAttribute('aria-label','Tile '+(i+1));
+   btn.onclick=()=>{if(challenge.special==='double'){if(selected.includes(i)){selected.splice(selected.indexOf(i),1);btn.classList.remove('selected')}else if(selected.length<2){selected.push(i);btn.classList.add('selected')}if(selected.length===2)submit(selected.sort((x,y)=>x-y).join(','))}else submit(String(i))};
+   grid.appendChild(btn)
+  });$('gameContent').appendChild(grid);
  }else if(challenge.type==='match'){
   const target=document.createElement('div');target.className='target';target.style.background=challenge.target;target.textContent=tr('target');$('gameContent').appendChild(target);
-  const palette=document.createElement('div');palette.className='palette';challenge.options.forEach(color=>{const b=document.createElement('button');b.className='choice';b.style.background=color;b.setAttribute('aria-label','Choose a color');b.onclick=()=>submit(color);palette.appendChild(b)});$('gameContent').appendChild(palette);
+  const palette=document.createElement('div');palette.className='palette';challenge.options.forEach(color=>{const btn=document.createElement('button');btn.className='choice';btn.style.background=color;btn.setAttribute('aria-label','Choose a color');btn.onclick=()=>submit(color);palette.appendChild(btn)});$('gameContent').appendChild(palette);
  }else{
   const palette=document.createElement('div');palette.className='palette';palette.style.gridTemplateColumns='repeat('+Math.min(4,challenge.palette.length)+',minmax(0,1fr))';
-  challenge.palette.forEach((color,i)=>{const b=document.createElement('button');b.className='choice';b.style.background=color;b.disabled=true;b.onclick=()=>{memoryInput.push(i);b.classList.add('memory-on');setTimeout(()=>b.classList.remove('memory-on'),180);if(memoryInput.length===challenge.sequence.length)submit(memoryInput.join(','))};palette.appendChild(b)});$('gameContent').appendChild(palette);
+  challenge.palette.forEach((color,i)=>{const btn=document.createElement('button');btn.className='choice';btn.style.background=color;btn.disabled=true;btn.onclick=()=>{memoryInput.push(i);btn.classList.add('memory-on');setTimeout(()=>btn.classList.remove('memory-on'),180);if(memoryInput.length===challenge.sequence.length){const answer=challenge.reverse?[...memoryInput].reverse():memoryInput;submit(answer.join(','))}};palette.appendChild(btn)});$('gameContent').appendChild(palette);
   const info=document.createElement('p');info.className='center muted';info.id='memoryInfo';info.textContent=tr('watchColors');$('gameContent').appendChild(info);
-  let step=0;const flash=()=>{if(step>=challenge.sequence.length){info.textContent=tr('yourTurn');palette.querySelectorAll('button').forEach(b=>b.disabled=false);return}
-   const btn=palette.children[challenge.sequence[step]];btn.classList.add('memory-on');setTimeout(()=>btn.classList.remove('memory-on'),410);step++;setTimeout(flash,590);
+  let step=0;const flash=()=>{if(step>=challenge.sequence.length){info.textContent=tr('yourTurn');palette.querySelectorAll('button').forEach(btn=>btn.disabled=false);return}
+   const btn=palette.children[challenge.sequence[step]];btn.classList.add('memory-on');setTimeout(()=>btn.classList.remove('memory-on'),410);step++;setTimeout(flash,590)
   };setTimeout(flash,450);
  }
 }
 function updateScores(a,b){$('youScore').textContent=a;$('opScore').textContent=b}
 function startSolo(){
- leaveRealtime(false);gameMode='solo';const built=makeDeck(currentDifficulty(),15);soloDeck=built.deck;soloAnswers=built.answers;soloRound=0;soloScore=0;botScore=0;show('game');renderSoloRound();
+ leaveRealtime(false);gameMode='solo';powerupUsed.clear();['powerExtra','powerReveal','powerFreeze'].forEach(id=>$(id).disabled=false);const built=makeDeck(currentDifficulty(),15);soloDeck=built.deck;soloAnswers=built.answers;soloRound=0;soloScore=0;botScore=0;show('game');renderSoloRound();
 }
 function renderSoloRound(){
  if(soloRound>=soloDeck.length){finishSolo();return}
@@ -391,7 +409,7 @@ function renderSoloRound(){
  startTimer(()=>finishSoloRound(false,true),soloDeck[soloRound].timeLimit||30);
 }
 function finishSoloRound(correct,timedOut=false){
- if(roundLocked)return;roundLocked=true;stopTimer();
+ if(roundLocked)return;roundLocked=true;stopTimer();playFx(correct?'correct':'lose');if(correct)vibrate(45);
  const points=correct?Math.max(10,Math.round(100+remaining*8)):0;
  soloScore+=points;botScore+=rand(45)+20;updateScores(soloScore,botScore);
  $('gameContent').querySelectorAll('button').forEach(b=>b.disabled=true);
@@ -400,7 +418,7 @@ function finishSoloRound(correct,timedOut=false){
 }
 function finishSolo(){
  stopTimer();localStorage.setItem('ccBest',String(Math.max(Number(localStorage.getItem('ccBest')||0),soloScore)));setBest();
- $('finalScore').textContent=soloScore;$('resultTitle').textContent=soloScore>=botScore?tr('youBeatComputer'):tr('computerWon');
+ $('finalScore').textContent=soloScore;$('resultTitle').textContent=soloScore>=botScore?tr('youBeatComputer'):tr('computerWon');playFx(soloScore>=botScore?'win':'lose');
  $('resultRows').innerHTML=tr('soloResultRows',{you:soloScore,opponent:botScore});$('playAgain').classList.remove('hidden');$('playAgain').disabled=false;show('result');
 }
 
@@ -452,7 +470,7 @@ async function joinRealtime(code){
  roomChannel=backend.channel('cc-room-'+code).on('postgres_changes',{event:'*',schema:'public',table:'cc_rooms',filter:'code=eq.'+code},payload=>{
   if(payload.new&&payload.new.code===code){room=payload.new;handleRoomUpdate()}
  }).subscribe();
- await refreshRoom();
+ await joinRoomEvents(code);await refreshRoom();
 }
 async function refreshRoom(){
  if(!backend||!room?.code)return;
@@ -481,7 +499,7 @@ function handleRoomUpdate(){
   show('game');$('progress').style.width=(room.round*10)+'%';handleRoomLabels();
   const meHost=isHost();
   updateScores(meHost?room.host_score:room.guest_score,meHost?room.guest_score:room.host_score);
-  if(lastRenderedRound!==room.round){lastRenderedRound=room.round;multiSubmitted=false;message('feedback','');renderChallenge(room.deck[room.round],submitMulti);startTimer(()=>submitMulti('__TIMEOUT__'),room.deck[room.round]?.timeLimit||30)}
+  if(lastRenderedRound!==room.round){lastRenderedRound=room.round;multiSubmitted=false;message('feedback','');renderChallenge(room.deck[room.round],submitMulti);['Extra','Reveal','Freeze'].forEach(x=>{$('power'+x).disabled=powerupUsed.has((room.set_number||'')+':'+({Extra:'extra_time',Reveal:'reveal',Freeze:'freeze'}[x]))});startTimer(()=>submitMulti('__TIMEOUT__'),room.deck[room.round]?.timeLimit||30)}
   else if(multiSubmitted){message('feedback',room[meHost?'guest_answered':'host_answered']?tr('answerWaiting'):tr('submitWaiting'))}
   return;
  }
@@ -507,7 +525,7 @@ async function submitMulti(answer){
  }catch(e){multiSubmitted=false;message('feedback','Could not submit answer: '+(e.message||e));}
 }
 function showOnlineResult(){
- stopTimer();
+ stopTimer();playFx((isHost()?room.host_score>room.guest_score:room.guest_score>room.host_score)?'win':'lose');vibrate([50,30,70]);
  const meHost=isHost(),my=meHost?room.host_score:room.guest_score,op=meHost?room.guest_score:room.host_score;
  const myWins=meHost?Number(room.host_wins||0):Number(room.guest_wins||0);
  const opWins=meHost?Number(room.guest_wins||0):Number(room.host_wins||0);
@@ -528,7 +546,7 @@ function showOnlineResult(){
 }
 function escapeText(value){return String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function leaveRealtime(showHome=true){
- stopTimer();if(roomChannel&&backend){try{await backend.removeChannel(roomChannel)}catch{}}
+ stopTimer();if(eventChannel&&backend){try{await backend.removeChannel(eventChannel)}catch{}}eventChannel=null;if(roomChannel&&backend){try{await backend.removeChannel(roomChannel)}catch{}}
  roomChannel=null;room=null;lastRenderedRound=-1;multiSubmitted=false;
  if(showHome)show('home');
 }
