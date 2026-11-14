@@ -16,6 +16,13 @@ body[data-theme="forest"]{--bg:#09170f;--panel:#14271b;--line:#31543b;--cyan:#75
 body[data-theme="candy"]{--bg:#1b0b20;--panel:#2a1537;--line:#5a2e75;--cyan:#64e9ff;--pink:#ff72c5;--purple:#c08cff}
 .profile-panel{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#ffffff08,transparent)}
 .profile-panel h3{margin-top:0}.profile-panel .row{margin:10px 0}.profile-panel .field{max-width:180px}
+.stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.stat-card{background:#0d1428;border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center}
+.stat-card span{display:block;color:var(--muted);font-size:11px}.stat-card strong{display:block;color:var(--cyan);font-size:22px;margin-top:4px}
+.achievement-list{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 14px}
+.achievement-badge{border:1px solid #5b527b;background:#221d3b;border-radius:999px;padding:6px 9px;font-size:11px;color:#e9e2ff}
+.match-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#0d1428;font-size:12px}
+.match-item small{display:block;color:var(--muted);margin-top:3px}.match-result{white-space:nowrap;font-weight:850}
 .friends-list{display:grid;gap:8px;margin-top:10px}.friend-item{padding:10px;border:1px solid var(--line);border-radius:12px;display:flex;justify-content:space-between;gap:8px;align-items:center}
 .powerup-bar,.reaction-bar{justify-content:center;flex-wrap:wrap;margin:12px 0}.powerup-bar button,.reaction-bar button{min-width:78px}
 .tile.selected{outline:4px solid white;outline-offset:2px;transform:scale(.94)}
@@ -110,6 +117,16 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
    <p class="muted" id="friendCodeLabel">Your Friend Code</p><div class="code" id="friendCode">--------</div>
    <div class="row"><input class="field" id="friendCodeInput" maxlength="8" placeholder="Friend code"><button class="secondary" id="addFriend">Add Friend</button></div>
    <p id="profileMessage" class="statusline"></p><div id="friendRequests" class="friends-list"></div><div id="friendsList" class="friends-list"></div>
+   <div class="profile-panel" id="matchStatsPanel">
+    <h3 id="matchStatsTitle">Head-to-Head</h3>
+    <div class="stats-grid">
+     <div class="stat-card"><span id="setsLabel">Sets</span><strong id="setsPlayed">0</strong></div>
+     <div class="stat-card"><span id="winsLabel">Wins</span><strong id="setsWon">0</strong></div>
+     <div class="stat-card"><span id="streakLabel">Win streak</span><strong id="winStreak">0</strong></div>
+    </div>
+    <p id="achievementsTitle" class="muted">Achievements</p><div id="achievementBadges" class="achievement-list"></div>
+    <p id="historyTitle" class="muted">Recent matches</p><div id="matchHistory" class="friends-list"><span class="muted">Connect to load match history.</span></div>
+   </div>
   </div>
 
   <hr>
@@ -156,9 +173,10 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
   <div class="bar"><i id="progress"></i></div>
   <div class="row" style="margin-top:14px"><div class="scorebox" id="youLabel">Your Score<strong id="youScore">0</strong></div><div class="scorebox" id="opLabel">Opponent<strong id="opScore">0</strong></div></div>
   <p id="seriesScore" class="center muted hidden"></p>
-  <div class="actions powerup-bar" id="powerupBar">
-   <button class="secondary" id="powerExtra">⏱ +8s</button><button class="secondary" id="powerReveal">🔎 Reveal</button><button class="secondary" id="powerFreeze">❄️ Freeze</button>
+  <div class="actions powerup-bar hidden" id="powerupBar">
+   <button class="secondary" id="powerExtra">⏱ +5s</button><button class="secondary" id="powerReveal">🔎 Hint</button><button class="secondary" id="powerFreeze">❄️ Freeze</button>
   </div>
+  <p id="powerupInfo" class="center muted" style="font-size:12px">2 power-ups per set • one per round • using one costs 25% of this round’s points</p>
   <div class="actions reaction-bar" id="reactionBar"><button class="secondary" data-reaction="🔥">🔥</button><button class="secondary" data-reaction="😂">😂</button><button class="secondary" data-reaction="👏">👏</button><button class="secondary" data-reaction="😈">😈</button><button class="secondary" data-reaction="😎">😎</button></div>
   <p id="reactionNotice" class="center statusline"></p>
   <h3 id="modeLabel" class="center"></h3><p id="hint" class="center muted"></p>
@@ -249,6 +267,7 @@ const pick = a => a[rand(a.length)];
 const shuffle = a => [...a].sort(()=>Math.random()-.5);
 let backend=null, currentUser=null, room=null, roomChannel=null, eventChannel=null;
 let currentChallenge=null, powerupUsed=new Set(), audioContext=null, freezeTimeout=null;
+let powerupSetUses=0, powerupRoundUsed=false, powerupStatusLoading=false;
 let gameMode='solo', soloDeck=[], soloAnswers=[], soloRound=0, soloScore=0, botScore=0;
 let gameTimer=null, roundStartedAt=0, remaining=30, roundLocked=false, multiSubmitted=false, lastRenderedRound=-1, memoryInput=[];
 let language=['en','tr'].includes(localStorage.getItem('ccLanguage'))?localStorage.getItem('ccLanguage'):'en';
@@ -269,13 +288,26 @@ en:{
  correct:'Correct! +{points} points',wrong:'Incorrect answer. Try again next round.',timeUp:'Time is up!',youBeatComputer:'You beat the computer!',computerWon:'The computer won this time',
  soloResultRows:'<p>Your Score: <b>{you}</b></p><p>Computer score: <b>{opponent}</b></p>',playAgain:'Play Again',home:'Home',back:'← Back',howToPlay:'How to Play',
  findColor:'🎯 Find the odd color on the board.',colorMatch:'🎨 Choose the exact matching color.',memory:'🧠 Watch the color sequence, then repeat it in order.',
- howScoring:'Each round has its own time limit. Faster correct answers earn more points. Online matches use 10 rounds per set; first to 3 set wins takes the series.',
+ howScoring:'Each set has 10 rounds. First to 3 sets wins the best-of-five series. Power-ups are limited to 2 per player per set, max 1 per round, and reduce that round’s points by 25%. No power-up is the highest-scoring option.',
  onlineRoom:'Online Room',host:'Host',player2:'Player 2',yourPoints:'Your Points',urlLabel:'Supabase Project URL',keyLabel:'Supabase anon / publishable key',lobbySetupNote:'Multiplayer needs a one-time Supabase setup in Settings. Never enter a service_role key here.',saveTest:'Save & Test Connection',clearSettings:'Clear Settings',connectingCreatingRoom:'Connecting and creating room...',searchingRoom:'Searching for room...',settingsCleared:'Connection settings cleared.',connectionTest:'Testing connection...',codeCopied:'Room code copied.',manualCode:'Copy the code manually: {code}',shareInvite:'Join my Color Clash match. Room code: {code}',roomCodeMustSix:'Room code must contain 6 letters or numbers.',
  preparingSet:'Preparing set {set}...',submitWaiting:'Your answer was submitted. Waiting for your opponent...',correctWaiting:'Correct! +{points} points. Waiting for the other player.',answerWaiting:'Answer locked. Waiting for the other player.',
  setWon:'You won Set {set}!',setLost:'Your friend won Set {set}.',setDraw:'Set {set} is a draw!',seriesWon:'YOU WON THE SERIES!',seriesLost:'Your friend won the series.',nextSet:'Play Set {set}',waitingHost:'Waiting for host to start Set {set}',
  seriesScore:'Series wins — You: {you} | Opponent: {opponent}',setScore:'Set score — You: {you} | Opponent: {opponent}',firstToThree:'First player to 3 set wins takes the series.',roomLabel:'Room: {code}',
  profileTitle:'Player Profile',profileName:'Display Name',avatar:'Avatar',theme:'Theme',saveProfile:'Save Profile',soundOn:'🔊 Sound: On',soundOff:'🔇 Sound: Off',vibrationOn:'📳 Vibration: On',vibrationOff:'📴 Vibration: Off',yourFriendCode:'Your Friend Code',friendCodePlaceholder:'Friend code',addFriend:'Add Friend',noFriends:'No friends added yet.',inviteFriend:'Copy code',profileSaved:'Profile saved!',friendAdded:'Friend added!',friendRequestSent:'Friend request sent.',friendCodeCopied:'Friend code copied.',incomingRequests:'Friend Requests',friendRequestFrom:'Request from',accept:'Accept',roomInvite:'Join my Color Clash room: {code}',roomInviteCopied:'Room invite copied.',onlineOnly:'Available in online rooms only.',powerUsed:'Power-up activated!',frozen:'Frozen! You cannot answer for a moment.',freezeEnded:'You can play again!',opponentReaction:'Your opponent reacted!',doubleHint:'SPECIAL: Find BOTH different tiles.',reverseHint:'SPECIAL: Watch the sequence, then enter it in REVERSE order.',closeHint:'SPECIAL: Pick the color that is almost identical to the target.',
- connectedSuccessfully:'Connected successfully. You can now create a room or join a friend.'
+ connectedSuccessfully:'Connected successfully. You can now create a room or join a friend.',
+ powerupInfo:'2 power-ups per set • max 1 per round • -25% points this round when used',
+ powerupUsed:'Power-up used. This round is worth 25% fewer points.',
+ powerupLimit:'No charges left, or you already used one this round.',
+ powerupPenalty:'Correct answer, but the 25% power-up penalty was applied.',
+ opponentPowerup:'Your opponent used a power-up!',
+ speedHint:'SPECIAL ROUND: Lightning speed! You have only 14 seconds.',
+ quickMemoryHint:'SPECIAL ROUND: Quick memory! Watch the sequence carefully.',
+ matchStatsTitle:'Head-to-Head',setsLabel:'Sets played',winsLabel:'Sets won',streakLabel:'Win streak',
+ achievementsTitle:'Achievements',historyTitle:'Recent matches',noHistory:'No completed sets yet. Finish a set to create your history.',
+ emptyAchievements:'Play more sets to unlock achievements.',
+ achievementFirst:'First Victory',achievementFive:'Five Wins',achievementStreak:'Hot Streak',achievementPerfect:'Perfect Focus',achievementFair:'Fair Play',
+ resultWin:'WIN',resultLoss:'LOSS',resultDraw:'DRAW',matchesLabel:'Matches',
+ powerupLoading:'Checking power-up charges...'
 },
 tr:{
  settings:'Ayarlar',soloAvailable:'Tek oyunculu mod kullanılabilir',connecting:'Oyun sunucusuna bağlanıyor',connected:'Oyun sunucusuna bağlandı',disconnected:'Bağlantı kesildi',
@@ -289,13 +321,26 @@ tr:{
  correct:'Doğru! +{points} puan',wrong:'Yanlış cevap. Sonraki turda tekrar dene.',timeUp:'Süre doldu!',youBeatComputer:'Bilgisayarı yendin!',computerWon:'Bu kez bilgisayar kazandı',
  soloResultRows:'<p>Senin puanın: <b>{you}</b></p><p>Bilgisayar puanı: <b>{opponent}</b></p>',playAgain:'Tekrar Oyna',home:'Ana Sayfa',back:'← Geri',howToPlay:'Nasıl Oynanır?',
  findColor:'🎯 Tahtadaki farklı rengi bul.',colorMatch:'🎨 Hedefle aynı olan rengi seç.',memory:'🧠 Renk sırasını izle ve tekrar et.',
- howScoring:'Her turun kendi süre sınırı vardır. Doğru ve hızlı cevaplar daha çok puan kazandırır. Çevrimiçi her set 10 turdur; ilk 3 seti kazanan seriyi alır.',
+ howScoring:'Her sette 10 tur vardır. Beş setin üçünü kazanan maçı alır. Her oyuncu set başına en fazla 2 güçlendirici kullanabilir; tur başına 1 kullanım sınırı vardır ve o turun puanını %25 azaltır. Güçlendirici kullanmamak en yüksek puanı sağlar.',
  onlineRoom:'Çevrimiçi Oda',host:'Ev Sahibi',player2:'2. Oyuncu',yourPoints:'Puanların',urlLabel:'Supabase Proje URL’si',keyLabel:'Supabase anon / publishable anahtarı',lobbySetupNote:'Çok oyunculu mod için Ayarlar bölümünde Supabase bağlantısını bir kez kur. Buraya service_role anahtarı girme.',saveTest:'Kaydet ve Bağlantıyı Test Et',clearSettings:'Ayarları Temizle',connectingCreatingRoom:'Bağlanılıyor ve oda oluşturuluyor...',searchingRoom:'Oda aranıyor...',settingsCleared:'Bağlantı ayarları temizlendi.',connectionTest:'Bağlantı test ediliyor...',codeCopied:'Oda kodu kopyalandı.',manualCode:'Kodu elle kopyala: {code}',shareInvite:'Color Clash maçına katıl. Oda kodu: {code}',roomCodeMustSix:'Oda kodu 6 harf veya rakam içermelidir.',
  preparingSet:'{set}. set hazırlanıyor...',submitWaiting:'Cevabın gönderildi. Rakip bekleniyor...',correctWaiting:'Doğru! +{points} puan. Diğer oyuncu bekleniyor.',answerWaiting:'Cevap kilitlendi. Diğer oyuncu bekleniyor.',
  setWon:'{set}. seti kazandın!',setLost:'Arkadaşın {set}. seti kazandı.',setDraw:'{set}. set berabere!',seriesWon:'SERİYİ KAZANDIN!',seriesLost:'Arkadaşın seriyi kazandı.',nextSet:'{set}. Sete Başla',waitingHost:'Ev sahibinin {set}. seti başlatması bekleniyor',
  seriesScore:'Seri galibiyetleri — Sen: {you} | Rakip: {opponent}',setScore:'Set skoru — Sen: {you} | Rakip: {opponent}',firstToThree:'İlk 3 seti kazanan seriyi kazanır.',roomLabel:'Oda: {code}',
  profileTitle:'Oyuncu Profili',profileName:'Görünen Ad',avatar:'Avatar',theme:'Tema',saveProfile:'Profili Kaydet',soundOn:'🔊 Ses: Açık',soundOff:'🔇 Ses: Kapalı',vibrationOn:'📳 Titreşim: Açık',vibrationOff:'📴 Titreşim: Kapalı',yourFriendCode:'Arkadaş Kodun',friendCodePlaceholder:'Arkadaş kodu',addFriend:'Arkadaş Ekle',noFriends:'Henüz arkadaş eklenmedi.',inviteFriend:'Kodu Kopyala',profileSaved:'Profil kaydedildi!',friendAdded:'Arkadaş eklendi!',friendRequestSent:'Arkadaşlık isteği gönderildi.',friendCodeCopied:'Arkadaş kodu kopyalandı.',incomingRequests:'Arkadaşlık İstekleri',friendRequestFrom:'İstek gönderen',accept:'Kabul Et',roomInvite:'Color Clash odama katıl: {code}',roomInviteCopied:'Oda daveti kopyalandı.',onlineOnly:'Yalnızca çevrimiçi odalarda kullanılabilir.',powerUsed:'Güçlendirici etkinleştirildi!',frozen:'Donduruldun! Bir süre cevap veremezsin.',freezeEnded:'Tekrar oynayabilirsin!',opponentReaction:'Rakibin tepki gönderdi!',doubleHint:'ÖZEL: Farklı olan İKİ kareyi bul.',reverseHint:'ÖZEL: Renk sırasını izle ve TERSİNDEN gir.',closeHint:'ÖZEL: Hedef renge neredeyse aynı olan rengi seç.',
- connectedSuccessfully:'Bağlantı başarılı. Artık oda oluşturabilir veya arkadaşına katılabilirsin.'
+ connectedSuccessfully:'Bağlantı başarılı. Artık oda oluşturabilir veya arkadaşına katılabilirsin.',
+ powerupInfo:'Set başına 2 güçlendirici • tur başına en fazla 1 • kullanınca bu turun puanı %25 azalır',
+ powerupUsed:'Güçlendirici kullanıldı. Bu turun puanı %25 daha düşük.',
+ powerupLimit:'Hak kalmadı veya bu turda zaten kullandın.',
+ powerupPenalty:'Doğru cevap, ancak güçlendirici nedeniyle %25 puan kesintisi uygulandı.',
+ opponentPowerup:'Rakibin bir güçlendirici kullandı!',
+ speedHint:'ÖZEL TUR: Yıldırım hızı! Sadece 14 saniyen var.',
+ quickMemoryHint:'ÖZEL TUR: Hızlı hafıza! Sırayı dikkatlice izle.',
+ matchStatsTitle:'Bire Bir İstatistikler',setsLabel:'Oynanan set',winsLabel:'Kazanılan set',streakLabel:'Galibiyet serisi',
+ achievementsTitle:'Başarımlar',historyTitle:'Son maçlar',noHistory:'Henüz tamamlanmış set yok. Geçmiş oluşturmak için bir set bitir.',
+ emptyAchievements:'Başarım açmak için daha fazla set oyna.',
+ achievementFirst:'İlk Zafer',achievementFive:'Beş Galibiyet',achievementStreak:'Seri Galibiyet',achievementPerfect:'Kusursuz Odak',achievementFair:'Adil Oyun',
+ resultWin:'GALİBİYET',resultLoss:'MAĞLUBİYET',resultDraw:'BERABERLİK',matchesLabel:'Maçlar',
+ powerupLoading:'Güçlendirici hakları kontrol ediliyor...'
 }
 };
 const connectionKeys={'Solo mode available':'soloAvailable','Solo play available':'soloAvailable','Connecting to game server':'connecting','Connected to game server':'connected','Disconnected':'disconnected'};
@@ -310,6 +355,8 @@ function applyLanguage(){
  $('languageSelect').value=language;$('settingsOpen').textContent='⚙ '+tr('settings');
  $('difficultyLabel').textContent=tr('difficulty');for(const option of $('difficultySelect').options)option.textContent=tr(option.value);
  $('roundTypesNote').textContent=tr('roundTypes');$('seriesHint').textContent=tr('seriesHint');
+ $('powerupInfo').textContent=tr('powerupInfo');
+ $('matchStatsTitle').textContent=tr('matchStatsTitle');$('setsLabel').textContent=tr('setsLabel');$('winsLabel').textContent=tr('winsLabel');$('streakLabel').textContent=tr('streakLabel');$('achievementsTitle').textContent=tr('achievementsTitle');$('historyTitle').textContent=tr('historyTitle');
  $('best').textContent=tr('bestScore')+': '+(Number(localStorage.getItem('ccBest')||0));
  $('playerNameLabel').textContent=tr('playerName');$('playerName').placeholder=tr('enterName');$('roomInputLabel').textContent=tr('roomCode');
  $('lobbyBack').textContent=tr('back');$('howBack').textContent=tr('back');$('settingsBack').textContent=tr('back');
@@ -369,6 +416,8 @@ function makeDeck(difficulty=currentDifficulty(),count=10){
    deck.push({type:'memory',palette,sequence,timeLimit:cfg.seconds,difficulty,special:reverse?'reverse':null,reverse});
    answers.push((reverse?[...sequence].reverse():sequence).join(','));
   }
+  if(r===2){deck[deck.length-1].special='quick_memory';deck[deck.length-1].timeLimit=18;}
+  if(r===8){deck[deck.length-1].special='speed';deck[deck.length-1].timeLimit=14;}
  }
  return {deck,answers};
 }
@@ -382,6 +431,8 @@ function renderChallenge(challenge,submit){
  if(challenge.special==='double')$('hint').textContent=tr('doubleHint');
  if(challenge.special==='reverse')$('hint').textContent=tr('reverseHint');
  if(challenge.special==='close')$('hint').textContent=tr('closeHint');
+ if(challenge.special==='speed')$('hint').textContent=tr('speedHint');
+ if(challenge.special==='quick_memory')$('hint').textContent=tr('quickMemoryHint');
  if(challenge.type==='find'){
   const grid=document.createElement('div');grid.className='tiles';grid.style.gridTemplateColumns='repeat('+(challenge.boardSide||5)+',minmax(0,1fr))';grid.style.maxWidth='560px';grid.style.margin='16px auto';
   const selected=[];
@@ -397,13 +448,13 @@ function renderChallenge(challenge,submit){
   challenge.palette.forEach((color,i)=>{const btn=document.createElement('button');btn.className='choice';btn.style.background=color;btn.disabled=true;btn.onclick=()=>{memoryInput.push(i);btn.classList.add('memory-on');setTimeout(()=>btn.classList.remove('memory-on'),180);if(memoryInput.length===challenge.sequence.length){submit(memoryInput.join(','))}};palette.appendChild(btn)});$('gameContent').appendChild(palette);
   const info=document.createElement('p');info.className='center muted';info.id='memoryInfo';info.textContent=tr('watchColors');$('gameContent').appendChild(info);
   let step=0;const flash=()=>{if(step>=challenge.sequence.length){info.textContent=tr('yourTurn');palette.querySelectorAll('button').forEach(btn=>btn.disabled=false);return}
-   const btn=palette.children[challenge.sequence[step]];btn.classList.add('memory-on');setTimeout(()=>btn.classList.remove('memory-on'),410);step++;setTimeout(flash,590)
+   const quick=challenge.special==='quick_memory';const btn=palette.children[challenge.sequence[step]];btn.classList.add('memory-on');setTimeout(()=>btn.classList.remove('memory-on'),quick?210:410);step++;setTimeout(flash,quick?330:590)
   };setTimeout(flash,450);
  }
 }
 function updateScores(a,b){$('youScore').textContent=a;$('opScore').textContent=b}
 function startSolo(){
- leaveRealtime(false);gameMode='solo';powerupUsed.clear();['powerExtra','powerReveal','powerFreeze'].forEach(id=>$(id).disabled=false);const built=makeDeck(currentDifficulty(),15);soloDeck=built.deck;soloAnswers=built.answers;soloRound=0;soloScore=0;botScore=0;show('game');renderSoloRound();
+ leaveRealtime(false);gameMode='solo';$('powerupBar').classList.add('hidden');powerupStatusLoading=true;powerupSetUses=0;powerupRoundUsed=false;powerupUsed.clear();['powerExtra','powerReveal','powerFreeze'].forEach(id=>$(id).disabled=true);const built=makeDeck(currentDifficulty(),15);soloDeck=built.deck;soloAnswers=built.answers;soloRound=0;soloScore=0;botScore=0;show('game');renderSoloRound();
 }
 function renderSoloRound(){
  if(soloRound>=soloDeck.length){finishSolo();return}
@@ -504,7 +555,7 @@ function handleRoomUpdate(){
   show('game');$('progress').style.width=(room.round*10)+'%';handleRoomLabels();
   const meHost=isHost();
   updateScores(meHost?room.host_score:room.guest_score,meHost?room.guest_score:room.host_score);
-  if(lastRenderedRound!==room.round){lastRenderedRound=room.round;multiSubmitted=false;message('feedback','');renderChallenge(room.deck[room.round],submitMulti);['Extra','Reveal','Freeze'].forEach(x=>{$('power'+x).disabled=powerupUsed.has((room.set_number||'')+':'+({Extra:'extra_time',Reveal:'reveal',Freeze:'freeze'}[x]))});startTimer(()=>submitMulti('__TIMEOUT__'),room.deck[room.round]?.timeLimit||30)}
+  if(lastRenderedRound!==room.round){lastRenderedRound=room.round;multiSubmitted=false;message('feedback','');renderChallenge(room.deck[room.round],submitMulti);powerupStatusLoading=true;powerupRoundUsed=false;renderPowerupControls();loadPowerupUsage();startTimer(()=>submitMulti('__TIMEOUT__'),room.deck[room.round]?.timeLimit||30)}
   else if(multiSubmitted){message('feedback',room[meHost?'guest_answered':'host_answered']?tr('answerWaiting'):tr('submitWaiting'))}
   return;
  }
@@ -551,7 +602,8 @@ function showOnlineResult(){
 }
 function escapeText(value){return String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function leaveRealtime(showHome=true){
- stopTimer();if(eventChannel&&backend){try{await backend.removeChannel(eventChannel)}catch{}}eventChannel=null;if(roomChannel&&backend){try{await backend.removeChannel(roomChannel)}catch{}}
+ stopTimer();powerupSetUses=0;powerupRoundUsed=false;powerupStatusLoading=false;$('powerupBar').classList.add('hidden');
+ if(eventChannel&&backend){try{await backend.removeChannel(eventChannel)}catch{}}eventChannel=null;if(roomChannel&&backend){try{await backend.removeChannel(roomChannel)}catch{}}
  roomChannel=null;room=null;lastRenderedRound=-1;multiSubmitted=false;powerupUsed.clear();['powerExtra','powerReveal','powerFreeze'].forEach(id=>$(id).disabled=false);
  if(showHome)show('home');
 }
@@ -794,7 +846,7 @@ async function loadProfile(){
  renderFriends(friends||[]);
  const {data:requests,error:requestError}=await backend.from('cc_friend_requests').select('id,sender_id').eq('receiver_id',currentUser.id).eq('status','pending');
  if(requestError)throw requestError;renderFriendRequests(requests||[]);
- applyPrefs();
+ applyPrefs();await loadMatchHistory();
 }
 function renderFriendRequests(requests){
  const root=$('friendRequests');root.innerHTML='';
@@ -815,6 +867,62 @@ function renderFriends(friends){
   row.append(label,invite);root.appendChild(row);
  });
 }
+function renderMatchHistory(rows){
+ const root=$('matchHistory');const badges=$('achievementBadges');root.innerHTML='';badges.innerHTML='';
+ const mine=rows.map(m=>{const host=m.host_id===currentUser.id;return {...m,myScore:Number(host?m.host_score:m.guest_score),opScore:Number(host?m.guest_score:m.host_score),myCorrect:Number(host?m.host_correct:m.guest_correct),myPowers:Number(host?m.host_powerups:m.guest_powerups),opponent:host?m.guest_name:m.host_name}});
+ const wins=mine.filter(m=>m.winner_id===currentUser.id).length;
+ const losses=mine.filter(m=>m.winner_id&&m.winner_id!==currentUser.id).length;
+ let streak=0;for(const m of mine){if(m.winner_id===currentUser.id)streak++;else break;}
+ $('setsPlayed').textContent=rows.length;$('setsWon').textContent=wins;$('winStreak').textContent=streak;
+ const unlocked=[];
+ if(wins>=1)unlocked.push(tr('achievementFirst'));
+ if(wins>=5)unlocked.push(tr('achievementFive'));
+ if(streak>=3)unlocked.push(tr('achievementStreak'));
+ if(mine.some(m=>m.myCorrect===10))unlocked.push(tr('achievementPerfect'));
+ if(mine.some(m=>m.winner_id===currentUser.id&&m.myPowers===0))unlocked.push(tr('achievementFair'));
+ if(unlocked.length){unlocked.forEach(name=>{const b=document.createElement('span');b.className='achievement-badge';b.textContent='🏅 '+name;badges.appendChild(b)})}
+ else badges.textContent=tr('emptyAchievements');
+ if(!mine.length){root.textContent=tr('noHistory');return}
+ mine.slice(0,8).forEach(m=>{
+  const row=document.createElement('div');row.className='match-item';
+  const left=document.createElement('div');left.style.minWidth='0';
+  const name=document.createElement('strong');name.textContent=m.opponent||'Opponent';
+  const meta=document.createElement('small');meta.textContent=tr('setLabel',{set:m.set_number})+' • '+new Date(m.played_at).toLocaleDateString(language==='tr'?'tr-TR':'en-US',{month:'short',day:'numeric'});
+  left.append(name,meta);
+  const result=document.createElement('span');result.className='match-result';
+  result.textContent=m.winner_id===currentUser.id?tr('resultWin'):m.winner_id?tr('resultLoss'):tr('resultDraw');
+  result.style.color=m.winner_id===currentUser.id?'#55efad':m.winner_id?'#ff7896':'#ffc857';
+  const score=document.createElement('small');score.textContent=m.myScore+' : '+m.opScore;score.style.textAlign='right';
+  const right=document.createElement('div');right.append(result,score);row.append(left,right);root.appendChild(row);
+ });
+}
+async function loadMatchHistory(){
+ if(!backend||!currentUser)return;
+ const uid=currentUser.id;
+ const {data,error}=await backend.from('cc_match_history')
+  .select('room_code,set_number,host_id,guest_id,host_name,guest_name,host_score,guest_score,winner_id,host_correct,guest_correct,host_powerups,guest_powerups,played_at')
+  .or('host_id.eq.'+uid+',guest_id.eq.'+uid).order('played_at',{ascending:false}).limit(40);
+ if(error)throw error;renderMatchHistory(data||[]);
+}
+function renderPowerupControls(){
+ const remaining=Math.max(0,2-powerupSetUses);
+ $('powerupInfo').textContent=powerupStatusLoading?tr('powerupLoading'):tr('powerupInfo')+' • '+remaining+'/2 left';
+ const disabled=powerupStatusLoading||powerupRoundUsed||remaining<=0||multiSubmitted||!room||room.status!=='playing';
+ ['powerExtra','powerReveal','powerFreeze'].forEach(id=>$(id).disabled=disabled);
+}
+async function loadPowerupUsage(){
+ if(!backend||!currentUser||!room)return;
+ const code=room.code,setNo=room.set_number,roundNo=room.round,uid=currentUser.id;
+ try{
+  const {data,error}=await backend.from('cc_room_events').select('round,event_type')
+   .eq('code',code).eq('set_number',setNo).eq('actor_id',uid).like('event_type','powerup:%');
+  if(error)throw error;
+  if(!room||room.code!==code||room.set_number!==setNo||room.round!==roundNo||currentUser?.id!==uid)return;
+  powerupSetUses=(data||[]).length;powerupRoundUsed=(data||[]).some(e=>Number(e.round)===Number(roundNo));
+  powerupStatusLoading=false;renderPowerupControls();
+ }catch(e){powerupStatusLoading=true;renderPowerupControls();message('feedback','Power-up status unavailable: '+(e.message||e))}
+}
+function renderMatchHistoryPlaceholder(){}
 async function saveProfile(){
  try{
   saveLocalPrefs();
@@ -839,29 +947,27 @@ function handleRoomEvent(ev){
   const emoji=ev.payload?.emoji||'👏';message('reactionNotice',emoji+' '+tr('opponentReaction'));playFx('reaction');vibrate(18);return;
  }
  if(ev.event_type==='powerup:freeze'){
-  $('gameContent').querySelectorAll('button').forEach(b=>b.disabled=true);
+  if(!multiSubmitted){$('gameContent').querySelectorAll('button').forEach(b=>b.disabled=true);}
   message('feedback',tr('frozen'));playFx('power');vibrate([35,35,35]);
-  clearTimeout(freezeTimeout);freezeTimeout=setTimeout(()=>{if(!multiSubmitted)$('gameContent').querySelectorAll('button').forEach(b=>b.disabled=false);message('feedback',tr('freezeEnded'))},2600);
+  clearTimeout(freezeTimeout);freezeTimeout=setTimeout(()=>{if(!multiSubmitted&&!roundLocked)$('gameContent').querySelectorAll('button').forEach(b=>b.disabled=false);message('feedback',tr('freezeEnded'))},1800);
+ }else if(ev.event_type?.startsWith('powerup:')){
+  message('reactionNotice',tr('opponentPowerup'));playFx('power');vibrate(18);
  }
 }
 async function sendRoomEvent(type,payload={}){
  const db=await requireBackend();const {error}=await db.rpc('cc_room_event_send',{p_code:room.code,p_event_type:type,p_payload:payload});if(error)throw error;
 }
 async function usePowerup(type){
- const key=(room?.set_number||'solo')+':'+type;
- if(powerupUsed.has(key)||roundLocked||multiSubmitted)return;
- if(type==='extra_time'){
-  roundStartedAt-=8000;remaining+=8;$('timer').textContent=remaining.toFixed(1);
- }else if(type==='reveal'){
-  revealChallenge();
- }else if(type==='freeze'){
-  if(!room||gameMode!=='online'){message('feedback',tr('onlineOnly'));return}
- }
+ if(gameMode!=='online'||!room||room.status!=='playing'){message('feedback',tr('onlineOnly'));return}
+ if(powerupStatusLoading||powerupRoundUsed||powerupSetUses>=2||multiSubmitted||roundLocked){message('feedback',tr('powerupLimit'));return}
  try{
-  if(room&&gameMode==='online')await sendRoomEvent('powerup:'+type,{});
-  powerupUsed.add(key);const btn=$('power'+(type==='extra_time'?'Extra':type==='reveal'?'Reveal':'Freeze'));if(btn)btn.disabled=true;
-  message('feedback',tr('powerUsed'));playFx('power');vibrate(40);
- }catch(e){message('feedback',e.message||String(e))}
+  // The database enforces the 2-per-set and 1-per-round limits before any effect is applied.
+  await sendRoomEvent('powerup:'+type,{});
+  powerupSetUses++;powerupRoundUsed=true;powerupStatusLoading=false;powerupUsed.add((room.set_number||'')+':'+room.round);renderPowerupControls();
+  if(type==='extra_time'){roundStartedAt-=5000;remaining+=5;$('timer').textContent=remaining.toFixed(1)}
+  else if(type==='reveal')revealChallenge();
+  message('feedback',tr('powerupUsed'));playFx('power');vibrate(40);
+ }catch(e){message('feedback',e.message||String(e));await loadPowerupUsage()}
 }
 function revealChallenge(){
  const c=currentChallenge;if(!c)return;
@@ -914,6 +1020,7 @@ $('avatarSelect').onchange=saveLocalPrefs;$('themeSelect').onchange=saveLocalPre
 $('profileName').value=localPlayerName;
 $('soundToggle').onclick=()=>{const p=prefs();p.sound=p.sound===false?true:false;localStorage.setItem('ccPrefs',JSON.stringify(p));applyPrefs();playFx('tap')};
 $('vibrationToggle').onclick=()=>{const p=prefs();p.vibrate=p.vibrate===false?true:false;localStorage.setItem('ccPrefs',JSON.stringify(p));applyPrefs();vibrate(30)};
+$('powerupInfo').textContent=tr('powerupInfo');
 $('powerExtra').onclick=()=>usePowerup('extra_time');$('powerReveal').onclick=()=>usePowerup('reveal');$('powerFreeze').onclick=()=>usePowerup('freeze');
 document.querySelectorAll('[data-reaction]').forEach(b=>b.onclick=()=>sendReaction(b.dataset.reaction));
 applyPrefs();
