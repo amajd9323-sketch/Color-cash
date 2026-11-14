@@ -414,7 +414,7 @@ hr{border:0;border-top:1px solid var(--line);margin:19px 0}
 <section id="home" class="home-screen">
  <div class="home-hero">
   <div class="hero-copy">
-   <span class="hero-kicker"><i></i> COLOR CLASH <b>/</b> QUICK DUEL</span>
+   <span class="hero-kicker"><i></i> COLOR CLASH <b>/</b> <span id="heroKickerLabel">QUICK DUEL</span></span>
    <h1 id="homeHeroTitle">Find the color.<br><em>Own the round.</em></h1>
    <p id="homeHeroText">Fast eyes. Sharp memory. One winner.</p>
    <div class="hero-tags"><span id="heroTagOnline">1 VS 1 ONLINE</span><span id="heroTagModes">3 CHALLENGE TYPES</span></div>
@@ -428,7 +428,7 @@ hr{border:0;border-top:1px solid var(--line);margin:19px 0}
  </div>
 
  <div class="section-heading">
-  <div><span class="section-kicker">YOUR NEXT MOVE</span><h2 id="chooseModeTitle">Choose your mode</h2></div>
+  <div><span class="section-kicker" id="homeSectionKicker">YOUR NEXT MOVE</span><h2 id="chooseModeTitle">Choose your mode</h2></div>
   <span class="section-index">01 — 04</span>
  </div>
 
@@ -607,7 +607,7 @@ hr{border:0;border-top:1px solid var(--line);margin:19px 0}
   <div class="actions"><button class="secondary" id="multiGameHome">Home</button></div>
  </div>
 </section>
-<div class="foot credit-footer">COLOR CLASH • Play smart. Win with color!<br><strong>HEMA</strong> • <strong>Mervie</strong><br>Created by HEMA — Built for friendly 1 vs 1 challenges</div>
+<div class="foot credit-footer"><span>COLOR CLASH • </span><span id="footerTagline">Play smart. Win with color!</span><br><strong>HEMA</strong> • <strong>Mervie</strong><br><span id="footerCredits">Created by HEMA — Built for friendly 1 vs 1 challenges</span></div>
 </main>
 
 <script>
@@ -663,7 +663,7 @@ en:{
  resultWin:'WIN',resultLoss:'LOSS',resultDraw:'DRAW',matchesLabel:'Matches',
  powerupLoading:'Checking power-up charges...',
  roundCaption:'ROUND',timeCaption:'TIME LEFT',focusCaption:'FOCUS MODE',reactionCaption:'QUICK REACTIONS',matchComplete:'MATCH COMPLETE',
- heroTagOnline:'1 VS 1 ONLINE',heroTagModes:'3 CHALLENGE TYPES',homeFooterTag:'MADE FOR THE NEXT REMATCH',
+ heroTagOnline:'1 VS 1 ONLINE',heroTagModes:'3 CHALLENGE TYPES',homeFooterTag:'MADE FOR THE NEXT REMATCH',heroKicker:'QUICK DUEL',homeSectionKicker:'YOUR NEXT MOVE',footerTagline:'Play smart. Win with color!',footerCredits:'Created by HEMA — Built for friendly 1 vs 1 challenges',
  profileNamePlaceholder:'Your display name',roomCodePlaceholder:'ABC123',supabaseUrlPlaceholder:'https://your-project.supabase.co',supabaseKeyPlaceholder:'Public anon / publishable key',
  powerExtraLabel:'⏱ +5s Time',powerRevealLabel:'🔎 Hint',powerFreezeLabel:'❄️ Freeze',
  continueRound:'Continue',autoNext:'Next puzzle loading…',tileAria:'Tile {number}',chooseColor:'Choose a color',
@@ -704,7 +704,7 @@ tr:{
  resultWin:'GALİBİYET',resultLoss:'MAĞLUBİYET',resultDraw:'BERABERLİK',matchesLabel:'Maçlar',
  powerupLoading:'Güçlendirici hakları kontrol ediliyor...',
  roundCaption:'TUR',timeCaption:'KALAN SÜRE',focusCaption:'ODAK MODU',reactionCaption:'HIZLI TEPKİLER',matchComplete:'MAÇ TAMAMLANDI',
- heroTagOnline:'1 VS 1 ÇEVRİMİÇİ',heroTagModes:'3 GÖREV TÜRÜ',homeFooterTag:'YENİDEN OYNAMAYA HAZIR MISIN?',
+ heroTagOnline:'1 VS 1 ÇEVRİMİÇİ',heroTagModes:'3 GÖREV TÜRÜ',homeFooterTag:'YENİDEN OYNAMAYA HAZIR MISIN?',heroKicker:'HIZLI DÜELLO',homeSectionKicker:'SIRADAKİ HAMLE',footerTagline:'Akıllıca oyna. Renklerle kazan!',footerCredits:'HEMA tarafından oluşturuldu — Dostça 1 VS 1 mücadeleleri için',
  profileNamePlaceholder:'Görünen adın',roomCodePlaceholder:'ABC123',supabaseUrlPlaceholder:'https://projeniz.supabase.co',supabaseKeyPlaceholder:'Genel anon / publishable anahtarı',
  powerExtraLabel:'⏱ +5 sn',powerRevealLabel:'🔎 İpucu',powerFreezeLabel:'❄️ Dondur',
  continueRound:'Devam Et',autoNext:'Sonraki bulmaca yükleniyor…',tileAria:'Kare {number}',chooseColor:'Bir renk seç',
@@ -726,7 +726,7 @@ function applyLanguage(){
  $('languageSelect').value=language;$('languageSelect').setAttribute('aria-label',language==='tr'?'Dil':'Language');$('settingsOpen').textContent='⚙ '+tr('settings');
  $('homeHeroTitle').innerHTML=tr('heroTitle').replace('. ','.<br><em>').replace(/\.$/,'</em>');
  $('homeHeroText').textContent=tr('heroDesc');$('chooseModeTitle').textContent=tr('chooseMode');
- $('heroTagOnline').textContent=tr('heroTagOnline');$('heroTagModes').textContent=tr('heroTagModes');$('homeFooterTag').textContent=tr('homeFooterTag');
+ $('heroTagOnline').textContent=tr('heroTagOnline');$('heroTagModes').textContent=tr('heroTagModes');$('homeFooterTag').textContent=tr('homeFooterTag');$('heroKickerLabel').textContent=tr('heroKicker');$('homeSectionKicker').textContent=tr('homeSectionKicker');$('footerTagline').textContent=tr('footerTagline');$('footerCredits').textContent=tr('footerCredits');
  $('roundCaption').textContent=tr('roundCaption');$('timeCaption').textContent=tr('timeCaption');$('focusCaption').textContent=tr('focusCaption');$('reactionCaption').textContent=tr('reactionCaption');$('matchComplete').textContent=tr('matchComplete');
  $('powerExtra').textContent=tr('powerExtraLabel');$('powerReveal').textContent=tr('powerRevealLabel');$('powerFreeze').textContent=tr('powerFreezeLabel');
  $('soloActionKicker').textContent=tr('soloKicker');$('createActionKicker').textContent=tr('createKicker');$('joinActionKicker').textContent=tr('joinKicker');
