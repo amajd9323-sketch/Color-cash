@@ -243,7 +243,7 @@ en:{
  soloResultRows:'<p>Your Score: <b>{you}</b></p><p>Computer score: <b>{opponent}</b></p>',playAgain:'Play Again',home:'Home',back:'← Back',howToPlay:'How to Play',
  findColor:'🎯 Find the odd color on the board.',colorMatch:'🎨 Choose the exact matching color.',memory:'🧠 Watch the color sequence, then repeat it in order.',
  howScoring:'Each round has its own time limit. Faster correct answers earn more points. Online matches use 10 rounds per set; first to 3 set wins takes the series.',
- onlineRoom:'Online Room',codeCopied:'Room code copied.',manualCode:'Copy the code manually: {code}',shareInvite:'Join my Color Clash match. Room code: {code}',
+ onlineRoom:'Online Room',host:'Host',player2:'Player 2',yourPoints:'Your Points',urlLabel:'Supabase Project URL',keyLabel:'Supabase anon / publishable key',lobbySetupNote:'Multiplayer needs a one-time Supabase setup in Settings. Never enter a service_role key here.',saveTest:'Save & Test Connection',clearSettings:'Clear Settings',connectingCreatingRoom:'Connecting and creating room...',searchingRoom:'Searching for room...',settingsCleared:'Connection settings cleared.',connectionTest:'Testing connection...',codeCopied:'Room code copied.',manualCode:'Copy the code manually: {code}',shareInvite:'Join my Color Clash match. Room code: {code}',roomCodeMustSix:'Room code must contain 6 letters or numbers.',
  preparingSet:'Preparing set {set}...',submitWaiting:'Your answer was submitted. Waiting for your opponent...',correctWaiting:'Correct! +{points} points. Waiting for the other player.',answerWaiting:'Answer locked. Waiting for the other player.',
  setWon:'You won Set {set}!',setLost:'Your friend won Set {set}.',setDraw:'Set {set} is a draw!',seriesWon:'YOU WON THE SERIES!',seriesLost:'Your friend won the series.',nextSet:'Play Set {set}',waitingHost:'Waiting for host to start Set {set}',
  seriesScore:'Series wins — You: {you} | Opponent: {opponent}',setScore:'Set score — You: {you} | Opponent: {opponent}',firstToThree:'First player to 3 set wins takes the series.',roomLabel:'Room: {code}',
@@ -262,7 +262,7 @@ tr:{
  soloResultRows:'<p>Senin puanın: <b>{you}</b></p><p>Bilgisayar puanı: <b>{opponent}</b></p>',playAgain:'Tekrar Oyna',home:'Ana Sayfa',back:'← Geri',howToPlay:'Nasıl Oynanır?',
  findColor:'🎯 Tahtadaki farklı rengi bul.',colorMatch:'🎨 Hedefle aynı olan rengi seç.',memory:'🧠 Renk sırasını izle ve tekrar et.',
  howScoring:'Her turun kendi süre sınırı vardır. Doğru ve hızlı cevaplar daha çok puan kazandırır. Çevrimiçi her set 10 turdur; ilk 3 seti kazanan seriyi alır.',
- onlineRoom:'Çevrimiçi Oda',codeCopied:'Oda kodu kopyalandı.',manualCode:'Kodu elle kopyala: {code}',shareInvite:'Color Clash maçına katıl. Oda kodu: {code}',
+ onlineRoom:'Çevrimiçi Oda',host:'Ev Sahibi',player2:'2. Oyuncu',yourPoints:'Puanların',urlLabel:'Supabase Proje URL’si',keyLabel:'Supabase anon / publishable anahtarı',lobbySetupNote:'Çok oyunculu mod için Ayarlar bölümünde Supabase bağlantısını bir kez kur. Buraya service_role anahtarı girme.',saveTest:'Kaydet ve Bağlantıyı Test Et',clearSettings:'Ayarları Temizle',connectingCreatingRoom:'Bağlanılıyor ve oda oluşturuluyor...',searchingRoom:'Oda aranıyor...',settingsCleared:'Bağlantı ayarları temizlendi.',connectionTest:'Bağlantı test ediliyor...',codeCopied:'Oda kodu kopyalandı.',manualCode:'Kodu elle kopyala: {code}',shareInvite:'Color Clash maçına katıl. Oda kodu: {code}',roomCodeMustSix:'Oda kodu 6 harf veya rakam içermelidir.',
  preparingSet:'{set}. set hazırlanıyor...',submitWaiting:'Cevabın gönderildi. Rakip bekleniyor...',correctWaiting:'Doğru! +{points} puan. Diğer oyuncu bekleniyor.',answerWaiting:'Cevap kilitlendi. Diğer oyuncu bekleniyor.',
  setWon:'{set}. seti kazandın!',setLost:'Arkadaşın {set}. seti kazandı.',setDraw:'{set}. set berabere!',seriesWon:'SERİYİ KAZANDIN!',seriesLost:'Arkadaşın seriyi kazandı.',nextSet:'{set}. Sete Başla',waitingHost:'Ev sahibinin {set}. seti başlatması bekleniyor',
  seriesScore:'Seri galibiyetleri — Sen: {you} | Rakip: {opponent}',setScore:'Set skoru — Sen: {you} | Rakip: {opponent}',firstToThree:'İlk 3 seti kazanan seriyi kazanır.',roomLabel:'Oda: {code}',
@@ -286,6 +286,9 @@ function applyLanguage(){
  $('lobbyBack').textContent=tr('back');$('howBack').textContent=tr('back');$('settingsBack').textContent=tr('back');
  $('howTitle').textContent=tr('howToPlay');$('howFind').textContent=tr('findColor');$('howMatch').textContent=tr('colorMatch');$('howMemory').textContent=tr('memory');$('howScoring').textContent=tr('howScoring');
  $('connectionBadge').textContent=tr('settingsBadge');$('settingsTitle').textContent=tr('settingsTitle');$('settingsDescription').textContent=tr('settingsDescription');
+ $('onlineRoomLabel').textContent=tr('onlineRoom');$('roomCodeLabel').textContent=tr('roomCode');$('hostLabel').textContent=tr('host');$('guestLabel').textContent=tr('player2');$('yourPointsLabel').textContent=tr('yourPoints');
+ $('urlLabel').textContent=tr('urlLabel');$('keyLabel').textContent=tr('keyLabel');$('settingsNote').innerHTML=tr('lobbySetupNote');
+ $('saveSettings').textContent=tr('saveTest');$('clearSettings').textContent=tr('clearSettings');$('lobbySetupNote').textContent=tr('lobbySetupNote');
  $('createRoom').textContent=tr('createRoom');$('joinRoom').textContent=tr('joinRoom');$('copyCode').textContent=tr('copyCode');$('shareCode').textContent=tr('share');$('leaveRoom').textContent=tr('leaveRoom');$('startOnline').textContent=tr('startMatch');
  $('quitGame').textContent=tr('exit');$('nextRound').textContent=tr('nextRound');$('playAgain').textContent=tr('playAgain');$('resultHome').textContent=tr('home');
  $('connection').textContent='● '+tr(connectionKeys[connectionMessage]||connectionMessage);
@@ -402,7 +405,7 @@ function openLobby(kind){
  $('playerName').value=localPlayerName;$('roomInput').value='';message('lobbyMessage','');show('lobby');
 }
 async function createRoom(){
- const btn=$('createRoom');btn.disabled=true;message('lobbyMessage','Connecting and creating room...');
+ const btn=$('createRoom');btn.disabled=true;message('lobbyMessage',tr('connectingCreatingRoom'));
  try{
   const db=await requireBackend();const code=makeRoomCode();
   const {data,error}=await db.rpc('cc_create_room',{p_code:code,p_name:playerName()});if(error)throw error;
@@ -410,10 +413,10 @@ async function createRoom(){
  }catch(e){message('lobbyMessage','Could not create room: '+(e.message||e))}finally{btn.disabled=false}
 }
 async function joinRoom(){
- const btn=$('joinRoom');btn.disabled=true;message('lobbyMessage','Searching for room...');
+ const btn=$('joinRoom');btn.disabled=true;message('lobbyMessage',tr('searchingRoom'));
  try{
   const db=await requireBackend();const code=$('roomInput').value.trim().toUpperCase();
-  if(!/^[A-Z0-9]{6}$/.test(code))throw new Error('Room code must contain 6 letters or numbers.');
+  if(!/^[A-Z0-9]{6}$/.test(code))throw new Error(tr('roomCodeMustSix'));
   const {data,error}=await db.rpc('cc_join_room',{p_code:code,p_name:playerName()});if(error)throw error;
   room=data;await joinRealtime(code);$('createControls').classList.add('hidden');$('joinControls').classList.add('hidden');$('roomInfo').classList.remove('hidden');renderLobby();
  }catch(e){message('lobbyMessage','Could not join room: '+(e.message||e))}finally{btn.disabled=false}
@@ -433,7 +436,7 @@ async function refreshRoom(){
 function isHost(){return !!room&&room.host_id===currentUser?.id}
 function renderLobby(){
  if(!room)return;
- $('roomCode').textContent=room.code;$('hostName').textContent=room.host_name||'—';$('guestName').textContent=room.guest_name||'Waiting to join...';
+ $('roomCode').textContent=room.code;$('hostName').textContent=room.host_name||'—';$('guestName').textContent=room.guest_name||tr('waitingPlayer');
  $('startOnline').classList.toggle('hidden',!isHost());$('startOnline').disabled=!(isHost()&&room.guest_id&&room.status==='waiting');
  $('roomStatus').textContent=room.status==='waiting'?(room.guest_id?tr('bothReady'):tr('waitingPlayer2')):tr('roomStatus',{status:room.status});
 }
@@ -507,8 +510,8 @@ function openSettings(){
  const cfg=getConfig();$('supabaseUrl').value=cfg?.url||'';$('supabaseKey').value=cfg?.key||'';message('settingsMessage','');show('settings');
 }
 async function saveSettings(){
- const btn=$('saveSettings');btn.disabled=true;message('settingsMessage','Testing connection...');
- try{await connectBackend($('supabaseUrl').value,$('supabaseKey').value);message('settingsMessage','Connected successfully. You can now create a room or join a friend.');}
+ const btn=$('saveSettings');btn.disabled=true;message('settingsMessage',tr('connectionTest'));
+ try{await connectBackend($('supabaseUrl').value,$('supabaseKey').value);message('settingsMessage',tr('connectedSuccessfully'));}
  catch(e){message('settingsMessage',e.message||String(e));setConnection('Disconnected',false)}
  finally{btn.disabled=false}
 }
@@ -729,7 +732,7 @@ $('copyCode').onclick=async()=>{try{await navigator.clipboard.writeText(room.cod
 $('shareCode').onclick=async()=>{const text=tr('shareInvite',{code:room.code});try{if(navigator.share)await navigator.share({title:'Color Clash',text});else{await navigator.clipboard.writeText(text);message('lobbyMessage',tr('codeCopied'))}}catch{}};
 $('leaveRoom').onclick=()=>leaveRealtime(true);$('quitGame').onclick=()=>{if(gameMode==='online')leaveRealtime(true);else{stopTimer();show('home')}};
 $('nextRound').onclick=()=>{};$('playAgain').onclick=()=>{if(gameMode==='solo')startSolo();else if(gameMode==='online'&&room&&room.status==='finished'&&Math.max(Number(room.host_wins||0),Number(room.guest_wins||0))<3&&isHost())startOnline()};$('resultHome').onclick=()=>leaveRealtime(true);
-$('saveSettings').onclick=saveSettings;$('clearSettings').onclick=()=>{localStorage.removeItem('ccSupabase');backend=null;currentUser=null;$('supabaseUrl').value='';$('supabaseKey').value='';setConnection('Solo mode available');message('settingsMessage','Connection settings cleared.')};
+$('saveSettings').onclick=saveSettings;$('clearSettings').onclick=()=>{localStorage.removeItem('ccSupabase');backend=null;currentUser=null;$('supabaseUrl').value='';$('supabaseKey').value='';setConnection('Solo mode available');message('settingsMessage',tr('settingsCleared'))};
 $('playerName').value=localPlayerName;setBest();
 $('languageSelect').value=language;
 $('difficultySelect').value=localStorage.getItem('ccDifficulty')||'normal';
