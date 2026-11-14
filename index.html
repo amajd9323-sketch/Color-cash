@@ -16,7 +16,8 @@ body[data-theme="forest"]{--bg:#09170f;--panel:#14271b;--line:#31543b;--cyan:#75
 body[data-theme="candy"]{--bg:#1b0b20;--panel:#2a1537;--line:#5a2e75;--cyan:#64e9ff;--pink:#ff72c5;--purple:#c08cff}
 .profile-panel{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#ffffff08,transparent)}
 .profile-panel h3{margin-top:0}.profile-panel .row{margin:10px 0}.profile-panel .field{max-width:180px}
-.stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}
+@media(max-width:520px){.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .stat-card{background:#0d1428;border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center}
 .stat-card span{display:block;color:var(--muted);font-size:11px}.stat-card strong{display:block;color:var(--cyan);font-size:22px;margin-top:4px}
 .achievement-list{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 14px}
@@ -122,6 +123,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
     <div class="stats-grid">
      <div class="stat-card"><span id="setsLabel">Sets</span><strong id="setsPlayed">0</strong></div>
      <div class="stat-card"><span id="winsLabel">Wins</span><strong id="setsWon">0</strong></div>
+     <div class="stat-card"><span id="lossesLabel">Losses</span><strong id="setsLost">0</strong></div>
      <div class="stat-card"><span id="streakLabel">Win streak</span><strong id="winStreak">0</strong></div>
     </div>
     <p id="achievementsTitle" class="muted">Achievements</p><div id="achievementBadges" class="achievement-list"></div>
@@ -302,7 +304,7 @@ en:{
  opponentPowerup:'Your opponent used a power-up!',
  speedHint:'SPECIAL ROUND: Lightning speed! You have only 14 seconds.',
  quickMemoryHint:'SPECIAL ROUND: Quick memory! Watch the sequence carefully.',
- matchStatsTitle:'Head-to-Head',setsLabel:'Sets played',winsLabel:'Sets won',streakLabel:'Win streak',
+ matchStatsTitle:'Head-to-Head',setsLabel:'Sets played',winsLabel:'Sets won',lossesLabel:'Sets lost',streakLabel:'Win streak',
  achievementsTitle:'Achievements',historyTitle:'Recent matches',noHistory:'No completed sets yet. Finish a set to create your history.',
  emptyAchievements:'Play more sets to unlock achievements.',
  achievementFirst:'First Victory',achievementFive:'Five Wins',achievementStreak:'Hot Streak',achievementPerfect:'Perfect Focus',achievementFair:'Fair Play',
@@ -335,7 +337,7 @@ tr:{
  opponentPowerup:'Rakibin bir güçlendirici kullandı!',
  speedHint:'ÖZEL TUR: Yıldırım hızı! Sadece 14 saniyen var.',
  quickMemoryHint:'ÖZEL TUR: Hızlı hafıza! Sırayı dikkatlice izle.',
- matchStatsTitle:'Bire Bir İstatistikler',setsLabel:'Oynanan set',winsLabel:'Kazanılan set',streakLabel:'Galibiyet serisi',
+ matchStatsTitle:'Bire Bir İstatistikler',setsLabel:'Oynanan set',winsLabel:'Kazanılan set',lossesLabel:'Kaybedilen set',streakLabel:'Galibiyet serisi',
  achievementsTitle:'Başarımlar',historyTitle:'Son maçlar',noHistory:'Henüz tamamlanmış set yok. Geçmiş oluşturmak için bir set bitir.',
  emptyAchievements:'Başarım açmak için daha fazla set oyna.',
  achievementFirst:'İlk Zafer',achievementFive:'Beş Galibiyet',achievementStreak:'Seri Galibiyet',achievementPerfect:'Kusursuz Odak',achievementFair:'Adil Oyun',
@@ -356,7 +358,7 @@ function applyLanguage(){
  $('difficultyLabel').textContent=tr('difficulty');for(const option of $('difficultySelect').options)option.textContent=tr(option.value);
  $('roundTypesNote').textContent=tr('roundTypes');$('seriesHint').textContent=tr('seriesHint');
  $('powerupInfo').textContent=tr('powerupInfo');
- $('matchStatsTitle').textContent=tr('matchStatsTitle');$('setsLabel').textContent=tr('setsLabel');$('winsLabel').textContent=tr('winsLabel');$('streakLabel').textContent=tr('streakLabel');$('achievementsTitle').textContent=tr('achievementsTitle');$('historyTitle').textContent=tr('historyTitle');
+ $('matchStatsTitle').textContent=tr('matchStatsTitle');$('setsLabel').textContent=tr('setsLabel');$('winsLabel').textContent=tr('winsLabel');$('lossesLabel').textContent=tr('lossesLabel');$('streakLabel').textContent=tr('streakLabel');$('achievementsTitle').textContent=tr('achievementsTitle');$('historyTitle').textContent=tr('historyTitle');
  $('best').textContent=tr('bestScore')+': '+(Number(localStorage.getItem('ccBest')||0));
  $('playerNameLabel').textContent=tr('playerName');$('playerName').placeholder=tr('enterName');$('roomInputLabel').textContent=tr('roomCode');
  $('lobbyBack').textContent=tr('back');$('howBack').textContent=tr('back');$('settingsBack').textContent=tr('back');
@@ -578,7 +580,7 @@ async function submitMulti(answer){
  try{
   const db=await requireBackend();const {data,error}=await db.rpc('cc_submit_answer',{p_code:room.code,p_answer:String(answer),p_elapsed_ms:spent});if(error)throw error;
   await refreshRoom();
-  if(room?.status==='playing'&&room.round===submittedRound)message('feedback',data?.correct?tr('correctWaiting',{points:data.points}):tr('answerWaiting'));
+  if(room?.status==='playing'&&room.round===submittedRound)message('feedback',data?.correct?(data?.powerup_penalty?tr('powerupPenalty')+' +'+data.points:tr('correctWaiting',{points:data.points})):tr('answerWaiting'));
  }catch(e){multiSubmitted=false;message('feedback','Could not submit answer: '+(e.message||e));}
 }
 function showOnlineResult(){
@@ -603,7 +605,7 @@ function showOnlineResult(){
 }
 function escapeText(value){return String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function leaveRealtime(showHome=true){
- stopTimer();powerupSetUses=0;powerupRoundUsed=false;powerupStatusLoading=false;$('powerupBar').classList.add('hidden');
+ stopTimer();powerupSetUses=0;powerupRoundUsed=false;powerupStatusLoading=false;$('powerupBar').classList.add('hidden');$('powerupInfo').classList.add('hidden');
  if(eventChannel&&backend){try{await backend.removeChannel(eventChannel)}catch{}}eventChannel=null;if(roomChannel&&backend){try{await backend.removeChannel(roomChannel)}catch{}}
  roomChannel=null;room=null;lastRenderedRound=-1;multiSubmitted=false;powerupUsed.clear();['powerExtra','powerReveal','powerFreeze'].forEach(id=>$(id).disabled=false);
  if(showHome)show('home');
@@ -874,7 +876,7 @@ function renderMatchHistory(rows){
  const wins=mine.filter(m=>m.winner_id===currentUser.id).length;
  const losses=mine.filter(m=>m.winner_id&&m.winner_id!==currentUser.id).length;
  let streak=0;for(const m of mine){if(m.winner_id===currentUser.id)streak++;else break;}
- $('setsPlayed').textContent=rows.length;$('setsWon').textContent=wins;$('winStreak').textContent=streak;
+ $('setsPlayed').textContent=rows.length;$('setsWon').textContent=wins;$('setsLost').textContent=losses;$('winStreak').textContent=streak;
  const unlocked=[];
  if(wins>=1)unlocked.push(tr('achievementFirst'));
  if(wins>=5)unlocked.push(tr('achievementFive'));
