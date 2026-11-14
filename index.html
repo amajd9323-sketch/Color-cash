@@ -731,7 +731,7 @@ function applyLanguage(){
  $('homeHeroTitle').innerHTML=tr('heroTitle').replace('. ','.<br><em>').replace(/\.$/,'</em>');
  $('homeHeroText').textContent=tr('heroDesc');$('chooseModeTitle').textContent=tr('chooseMode');
  $('heroTagOnline').textContent=tr('heroTagOnline');$('heroTagModes').textContent=tr('heroTagModes');$('homeFooterTag').textContent=tr('homeFooterTag');$('heroKickerLabel').textContent=tr('heroKicker');$('homeSectionKicker').textContent=tr('homeSectionKicker');$('footerTagline').textContent=tr('footerTagline');$('footerCredits').textContent=tr('footerCredits');
- $('roundCaption').textContent=tr('roundCaption');$('timeCaption').textContent=tr('timeCaption');$('timer').setAttribute('aria-label',tr('timeLeft'));$('.game-progress').setAttribute('aria-label',tr('roundProgress'));$('focusCaption').textContent=tr('focusCaption');$('reactionCaption').textContent=tr('reactionCaption');$('matchComplete').textContent=tr('matchComplete');
+ $('roundCaption').textContent=tr('roundCaption');$('timeCaption').textContent=tr('timeCaption');$('timer').setAttribute('aria-label',tr('timeLeft'));document.querySelector('.game-progress').setAttribute('aria-label',tr('roundProgress'));$('focusCaption').textContent=tr('focusCaption');$('reactionCaption').textContent=tr('reactionCaption');$('matchComplete').textContent=tr('matchComplete');
  $('powerExtra').textContent=tr('powerExtraLabel');$('powerReveal').textContent=tr('powerRevealLabel');$('powerFreeze').textContent=tr('powerFreezeLabel');
  $('soloActionKicker').textContent=tr('soloKicker');$('createActionKicker').textContent=tr('createKicker');$('joinActionKicker').textContent=tr('joinKicker');
  $('profileSummaryTitle').textContent=tr('profileSummary');$('profileSummaryDesc').textContent=tr('profileSummaryDesc');$('difficultyHint').textContent=tr('difficultyHint');$('bestLabel').textContent=tr('bestLabel');
@@ -848,7 +848,7 @@ function renderChallenge(challenge,submit){
  }
 }
 function updateScores(a,b){$('youScore').textContent=a;$('opScore').textContent=b}
-function setProgress(current,total){const max=Math.max(1,Number(total)||1),value=Math.max(0,Math.min(max,Number(current)||0));$('progress').style.width=(value/max*100)+'%';const bar=$('.game-progress');bar.setAttribute('aria-valuemax',String(max));bar.setAttribute('aria-valuenow',String(value))}
+function setProgress(current,total){const max=Math.max(1,Number(total)||1),value=Math.max(0,Math.min(max,Number(current)||0));$('progress').style.width=(value/max*100)+'%';const bar=document.querySelector('.game-progress');bar.setAttribute('aria-valuemax',String(max));bar.setAttribute('aria-valuenow',String(value))}
 function startSolo(){
  if(soloAdvanceTimeout){clearTimeout(soloAdvanceTimeout);soloAdvanceTimeout=null;}clearTimeout(freezeTimeout);freezeTimeout=null;
  leaveRealtime(false);gameMode='solo';$('powerupBar').classList.add('hidden');powerupStatusLoading=true;powerupSetUses=0;powerupRoundUsed=false;powerupUsed.clear();['powerExtra','powerReveal','powerFreeze'].forEach(id=>$(id).disabled=true);const built=makeDeck(currentDifficulty(),15);soloDeck=built.deck;soloAnswers=built.answers;soloRound=0;soloScore=0;botScore=0;soloCorrect=0;soloResponseTimes=[];show('game');renderSoloRound();
