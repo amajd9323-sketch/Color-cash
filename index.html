@@ -361,7 +361,7 @@ function makeDeck(difficulty=currentDifficulty(),count=10){
    const target=pick(colors),close=closeColor(target),opts=[close];
    while(opts.length<cfg.options){const c=pick(colors);if(!opts.includes(c)&&c!==target)opts.push(c)}
    const options=shuffle(opts);
-   if(r===4||r===10){deck.push({type:'match',target,options,correctColor:close,close:true,timeLimit:cfg.seconds,difficulty,special:'close'});answers.push(close)}
+   if(r===4||r===10){deck.push({type:'match',target,options,close:true,timeLimit:cfg.seconds,difficulty,special:'close'});answers.push(close)}
    else{const standard=[target];while(standard.length<cfg.options){const c=pick(colors);if(!standard.includes(c))standard.push(c)}const choices=shuffle(standard);deck.push({type:'match',target,options:choices,timeLimit:cfg.seconds,difficulty});answers.push(target)}
   }else{
    const palette=colors.slice(0,cfg.palette),sequence=Array.from({length:cfg.sequence},()=>rand(cfg.palette));
@@ -373,7 +373,7 @@ function makeDeck(difficulty=currentDifficulty(),count=10){
  return {deck,answers};
 }
 function localizeChallenge(challenge){
- $('modeLabel').textContent=challenge.type==='find'?tr('findTitle'):challenge.type==='match'?tr('matchTitle'):tr('memoryTitle');
+ $('modeLabel').textContent=challenge.type==='find'?tr('findTitle'):challenge.type==='match'?tr('matchTitle'):tr('memoryTitle');playFx('tap');
  $('hint').textContent=challenge.type==='find'?tr('findHint'):challenge.type==='match'?tr('matchHint'):tr('memoryHint');
 }
 function renderChallenge(challenge,submit){
@@ -446,7 +446,7 @@ async function requireBackend(){
  return connectBackend(cfg.url,cfg.key);
 }
 function makeRoomCode(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:6},()=>chars[rand(chars.length)]).join('')}
-function playerName(){const name=($('playerName').value||localPlayerName||'Player').trim().slice(0,18)||'Player';localPlayerName=name;localStorage.setItem('ccPlayerName',name);return name}
+function playerName(){const name=($('playerName').value||localPlayerName||'Player').trim().slice(0,18)||'Player';localPlayerName=name;localStorage.setItem('ccPlayerName',name);return (prefs().avatar||'🟦')+' '+name}
 function openLobby(kind){
  if(room)leaveRealtime(false);
  gameMode='online';$('lobbyTitle').textContent=kind==='create'?tr('createRoomTitle'):tr('joinRoomTitle');
@@ -870,7 +870,7 @@ function revealChallenge(){
   const min=Math.min(...Object.values(counts));
   c.tiles.forEach((v,i)=>{if(counts[v]===min)$('gameContent').querySelectorAll('.tile')[i]?.classList.add('revealed')});
  }else if(c.type==='match'){
-  const answer=c.correctColor||c.target;
+  const answer=c.close?closeColor(c.target):c.target;
   const buttons=[...$('gameContent').querySelectorAll('.choice')];const idx=c.options.indexOf(answer);if(idx>=0)buttons[idx]?.classList.add('revealed');
  }else{
   const idx=c.sequence[c.sequence.length-1];$('gameContent').querySelectorAll('.choice')[idx]?.classList.add('revealed');
