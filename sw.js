@@ -1,4 +1,4 @@
-const CACHE_NAME = 'color-clash-v6';
+const CACHE_NAME = 'color-clash-v7';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', event => {
