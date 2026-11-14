@@ -233,7 +233,7 @@ const LANG={
 en:{
  settings:'Settings',soloAvailable:'Solo mode available',connecting:'Connecting to game server',connected:'Connected to game server',disconnected:'Disconnected',
  soloTitle:'Solo Challenge',soloDesc:'15 rounds against the computer. Beat your best score.',createTitle:'Create Room',createDesc:'Create a private room and share the code with a friend.',joinTitle:'Join Room',joinDesc:'Enter your friend’s room code and play together.',howTitle:'How to Play',howDesc:'Learn the challenges and scoring rules.',
- bestScore:'Best Score',roundTypes:'15 rounds • 3 challenge types',difficulty:'Difficulty',relaxed:'Relaxed · 35 sec',normal:'Normal · 30 sec',hard:'Hard · 25 sec',extreme:'Extreme · 20 sec',seriesHint:'Online series: 10 rounds per set. First player to win 3 sets wins.',
+ bestScore:'Best Score',roundTypes:'15 rounds • 3 challenge types',setLabel:'Set {set}',difficulty:'Difficulty',relaxed:'Relaxed · 35 sec',normal:'Normal · 30 sec',hard:'Hard · 25 sec',extreme:'Extreme · 20 sec',seriesHint:'Online series: 10 rounds per set. First player to win 3 sets wins.',
  settingsBadge:'Multiplayer Connection',settingsTitle:'Connection Settings',settingsDescription:'Enter your Supabase Project URL and anon / publishable key only.',
  playerName:'Player Name',enterName:'Enter your name',roomCode:'Room Code',createRoom:'Create Room',joinRoom:'Join Room',copyCode:'Copy Code',share:'Share',leaveRoom:'Leave Room',startMatch:'Start Match',
  createRoomTitle:'Create Room',joinRoomTitle:'Join Room',waitingPlayer:'Waiting for Player 2...',bothReady:'Both players are ready. The host can start the match.',waitingPlayer2:'Waiting for Player 2 to join...',roomStatus:'Room status: {status}',
@@ -252,7 +252,7 @@ en:{
 tr:{
  settings:'Ayarlar',soloAvailable:'Tek oyunculu mod kullanılabilir',connecting:'Oyun sunucusuna bağlanıyor',connected:'Oyun sunucusuna bağlandı',disconnected:'Bağlantı kesildi',
  soloTitle:'Tek Oyunculu Mücadele',soloDesc:'Bilgisayara karşı 15 tur oyna. En iyi skorunu geç.',createTitle:'Oda Oluştur',createDesc:'Özel bir oda oluştur ve kodu arkadaşınla paylaş.',joinTitle:'Odaya Katıl',joinDesc:'Arkadaşının oda kodunu gir ve birlikte oyna.',howTitle:'Nasıl Oynanır?',howDesc:'Görevleri ve puanlama kurallarını öğren.',
- bestScore:'En İyi Skor',roundTypes:'15 tur • 3 görev türü',difficulty:'Zorluk',relaxed:'Rahat · 35 sn',normal:'Normal · 30 sn',hard:'Zor · 25 sn',extreme:'Uzman · 20 sn',seriesHint:'Çevrimiçi seri: Her set 10 turdur. İlk 3 seti kazanan oyuncu seriyi kazanır.',
+ bestScore:'En İyi Skor',roundTypes:'15 tur • 3 görev türü',setLabel:'{set}. Set',difficulty:'Zorluk',relaxed:'Rahat · 35 sn',normal:'Normal · 30 sn',hard:'Zor · 25 sn',extreme:'Uzman · 20 sn',seriesHint:'Çevrimiçi seri: Her set 10 turdur. İlk 3 seti kazanan oyuncu seriyi kazanır.',
  settingsBadge:'Çok Oyunculu Bağlantı',settingsTitle:'Bağlantı Ayarları',settingsDescription:'Yalnızca Supabase proje URL’sini ve anon / publishable anahtarını gir.',
  playerName:'Oyuncu Adı',enterName:'Adını gir',roomCode:'Oda Kodu',createRoom:'Oda Oluştur',joinRoom:'Odaya Katıl',copyCode:'Kodu Kopyala',share:'Paylaş',leaveRoom:'Odadan Ayrıl',startMatch:'Maçı Başlat',
  createRoomTitle:'Oda Oluştur',joinRoomTitle:'Odaya Katıl',waitingPlayer:'2. oyuncu bekleniyor...',bothReady:'İki oyuncu hazır. Ev sahibi maçı başlatabilir.',waitingPlayer2:'2. oyuncunun katılması bekleniyor...',roomStatus:'Oda durumu: {status}',
@@ -269,7 +269,7 @@ tr:{
  connectedSuccessfully:'Bağlantı başarılı. Artık oda oluşturabilir veya arkadaşına katılabilirsin.'
 }
 };
-const connectionKeys={'Solo mode available':'soloAvailable','Connecting to game server':'connecting','Connected to game server':'connected','Disconnected':'disconnected'};
+const connectionKeys={'Solo mode available':'soloAvailable','Solo play available':'soloAvailable','Connecting to game server':'connecting','Connected to game server':'connected','Disconnected':'disconnected'};
 function tr(key,vars={}){let value=(LANG[language]&&LANG[language][key])||LANG.en[key]||key;for(const [k,v] of Object.entries(vars))value=value.replaceAll('{'+k+'}',String(v));return value}
 function show(id){screens.forEach(s=>$(s).classList.toggle('hidden',s!==id))}
 function message(id,text){const el=$(id);if(el)el.textContent=text||''}
@@ -289,7 +289,8 @@ function applyLanguage(){
  $('createRoom').textContent=tr('createRoom');$('joinRoom').textContent=tr('joinRoom');$('copyCode').textContent=tr('copyCode');$('shareCode').textContent=tr('share');$('leaveRoom').textContent=tr('leaveRoom');$('startOnline').textContent=tr('startMatch');
  $('quitGame').textContent=tr('exit');$('nextRound').textContent=tr('nextRound');$('playAgain').textContent=tr('playAgain');$('resultHome').textContent=tr('home');
  $('connection').textContent='● '+tr(connectionKeys[connectionMessage]||connectionMessage);
- if(room&&room.status==='playing')handleRoomLabels();
+ if(room&&room.status==='waiting')renderLobby();
+ if(room&&room.status==='playing'){handleRoomLabels();if(room.deck?.[room.round])localizeChallenge(room.deck[room.round])}
  if(room&&room.status==='finished')showOnlineResult();
  if(gameMode==='solo'&&!$('game').classList.contains('hidden')){ $('roundLabel').textContent=tr('roundOf',{current:soloRound+1,total:soloDeck.length});$('youLabel').firstChild.textContent=tr('yourScore');$('opLabel').firstChild.textContent=tr('computer');if(soloDeck[soloRound])localizeChallenge(soloDeck[soloRound])}
 }
@@ -730,6 +731,11 @@ $('leaveRoom').onclick=()=>leaveRealtime(true);$('quitGame').onclick=()=>{if(gam
 $('nextRound').onclick=()=>{};$('playAgain').onclick=()=>{if(gameMode==='solo')startSolo();else if(gameMode==='online'&&room&&room.status==='finished'&&Math.max(Number(room.host_wins||0),Number(room.guest_wins||0))<3&&isHost())startOnline()};$('resultHome').onclick=()=>leaveRealtime(true);
 $('saveSettings').onclick=saveSettings;$('clearSettings').onclick=()=>{localStorage.removeItem('ccSupabase');backend=null;currentUser=null;$('supabaseUrl').value='';$('supabaseKey').value='';setConnection('Solo mode available');message('settingsMessage','Connection settings cleared.')};
 $('playerName').value=localPlayerName;setBest();
+$('languageSelect').value=language;
+$('difficultySelect').value=localStorage.getItem('ccDifficulty')||'normal';
+$('languageSelect').onchange=()=>{language=$('languageSelect').value;localStorage.setItem('ccLanguage',language);applyLanguage()};
+$('difficultySelect').onchange=()=>localStorage.setItem('ccDifficulty',$('difficultySelect').value);
+applyLanguage();
 const initialConfig=getConfig();if(initialConfig){setConnection('Connecting to game server');connectBackend(initialConfig.url,initialConfig.key).catch(e=>{setConnection('Solo play available');console.warn('Supabase connection:',e.message)})}
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
 </script>
