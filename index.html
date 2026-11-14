@@ -396,7 +396,7 @@ function makeRoomCode(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Ar
 function playerName(){const name=($('playerName').value||localPlayerName||'Player').trim().slice(0,18)||'Player';localPlayerName=name;localStorage.setItem('ccPlayerName',name);return name}
 function openLobby(kind){
  if(room)leaveRealtime(false);
- gameMode='online';$('lobbyTitle').textContent=kind==='create'?'Create Room':'Join Room';
+ gameMode='online';$('lobbyTitle').textContent=kind==='create'?tr('createRoomTitle'):tr('joinRoomTitle');
  $('createControls').classList.toggle('hidden',kind!=='create');$('joinControls').classList.toggle('hidden',kind!=='join');$('roomInfo').classList.add('hidden');
  $('playerName').value=localPlayerName;$('roomInput').value='';message('lobbyMessage','');show('lobby');
 }
@@ -434,45 +434,67 @@ function renderLobby(){
  if(!room)return;
  $('roomCode').textContent=room.code;$('hostName').textContent=room.host_name||'—';$('guestName').textContent=room.guest_name||'Waiting to join...';
  $('startOnline').classList.toggle('hidden',!isHost());$('startOnline').disabled=!(isHost()&&room.guest_id&&room.status==='waiting');
- $('roomStatus').textContent=room.status==='waiting'?(room.guest_id?'Both players are ready. The host can start the match.':'Waiting for Player 2 to join...'):'Room status: '+room.status;
+ $('roomStatus').textContent=room.status==='waiting'?(room.guest_id?tr('bothReady'):tr('waitingPlayer2')):tr('roomStatus',{status:room.status});
+}
+function handleRoomLabels(){
+ const meHost=isHost();
+ $('roundLabel').textContent=tr('roundOf',{current:room.round+1,total:10})+' · '+tr('setLabel',{set:room.set_number});
+ $('youLabel').firstChild.textContent=meHost?room.host_name:room.guest_name;
+ $('opLabel').firstChild.textContent=meHost?room.guest_name:room.host_name;
+ $('seriesScore').classList.remove('hidden');
+ $('seriesScore').textContent=tr('seriesScore',{you:meHost?room.host_wins:room.guest_wins,opponent:meHost?room.guest_wins:room.host_wins});
 }
 function handleRoomUpdate(){
  if(!room)return;
  if(room.status==='waiting'){show('lobby');renderLobby();return}
  if(room.status==='playing'){
-  show('game');$('roundLabel').textContent='Round '+(room.round+1)+' / 10';$('progress').style.width=(room.round*10)+'%';
-  const meHost=isHost();$('youLabel').firstChild.textContent=meHost?room.host_name:room.guest_name;$('opLabel').firstChild.textContent=meHost?room.guest_name:room.host_name;
+  show('game');$('progress').style.width=(room.round*10)+'%';handleRoomLabels();
+  const meHost=isHost();
   updateScores(meHost?room.host_score:room.guest_score,meHost?room.guest_score:room.host_score);
-  if(lastRenderedRound!==room.round){lastRenderedRound=room.round;multiSubmitted=false;message('feedback','');renderChallenge(room.deck[room.round],submitMulti);startTimer(()=>submitMulti('__TIMEOUT__'))}
-  else if(multiSubmitted){message('feedback',room[meHost?'guest_answered':'host_answered']?'The other player has submitted too. Moving on...':'Your answer is locked. Waiting for the other player...')}
+  if(lastRenderedRound!==room.round){lastRenderedRound=room.round;multiSubmitted=false;message('feedback','');renderChallenge(room.deck[room.round],submitMulti);startTimer(()=>submitMulti('__TIMEOUT__'),room.deck[room.round]?.timeLimit||30)}
+  else if(multiSubmitted){message('feedback',room[meHost?'guest_answered':'host_answered']?tr('answerWaiting'):tr('submitWaiting'))}
   return;
  }
  if(room.status==='finished'){stopTimer();showOnlineResult();return}
 }
 async function startOnline(){
  if(!room||!isHost())return;
- const btn=$('startOnline');btn.disabled=true;message('lobbyMessage','Preparing rounds...');
+ const btn=$('startOnline');btn.disabled=true;message('lobbyMessage',tr('preparingSet',{set:(Number(room.set_number)||0)+1}));
  try{
-  const db=await requireBackend();const built=makeDeck();
+  const db=await requireBackend();const built=makeDeck(currentDifficulty(),10);
   const {error}=await db.rpc('cc_start_room',{p_code:room.code,p_deck:built.deck,p_answers:built.answers});if(error)throw error;
   lastRenderedRound=-1;multiSubmitted=false;await refreshRoom();
- }catch(e){message('lobbyMessage','Could not start match: '+(e.message||e));btn.disabled=false}
+ }catch(e){message('lobbyMessage','Could not start match: '+(e.message||e));btn.disabled=false;$('playAgain').disabled=false}
 }
 async function submitMulti(answer){
  if(multiSubmitted||!room||room.status!=='playing')return;
  multiSubmitted=true;const submittedRound=room.round;stopTimer();const spent=elapsed();
- $('gameContent').querySelectorAll('button').forEach(b=>b.disabled=true);message('feedback','Your answer was submitted. Waiting for your opponent...');
+ $('gameContent').querySelectorAll('button').forEach(b=>b.disabled=true);message('feedback',tr('submitWaiting'));
  try{
   const db=await requireBackend();const {data,error}=await db.rpc('cc_submit_answer',{p_code:room.code,p_answer:String(answer),p_elapsed_ms:spent});if(error)throw error;
   await refreshRoom();
-  if(room?.status==='playing'&&room.round===submittedRound)message('feedback',data?.correct?'Correct! +'+data.points+' points. Waiting for the other player.':'Answer locked. Waiting for the other player.');
+  if(room?.status==='playing'&&room.round===submittedRound)message('feedback',data?.correct?tr('correctWaiting',{points:data.points}):tr('answerWaiting'));
  }catch(e){multiSubmitted=false;message('feedback','Could not submit answer: '+(e.message||e));}
 }
 function showOnlineResult(){
- stopTimer();const meHost=isHost(),my=meHost?room.host_score:room.guest_score,op=meHost?room.guest_score:room.host_score;
- $('finalScore').textContent=my;$('resultTitle').textContent=my>op?'You won the match!':my<op?'Your friend won!':'It’s a draw!';
- $('resultRows').innerHTML='<p>'+escapeText(meHost?room.host_name:room.guest_name)+': <b>'+my+'</b></p><p>'+escapeText(meHost?room.guest_name:room.host_name)+': <b>'+op+'</b></p><p class="muted">Room: '+room.code+'</p>';
- $('playAgain').classList.add('hidden');show('result');
+ stopTimer();
+ const meHost=isHost(),my=meHost?room.host_score:room.guest_score,op=meHost?room.guest_score:room.host_score;
+ const myWins=meHost?Number(room.host_wins||0):Number(room.guest_wins||0);
+ const opWins=meHost?Number(room.guest_wins||0):Number(room.host_wins||0);
+ const seriesFinished=myWins>=3||opWins>=3;
+ $('finalScore').textContent=my+' : '+op;
+ if(seriesFinished){
+  $('resultTitle').textContent=myWins>opWins?tr('seriesWon'):tr('seriesLost');
+  $('resultRows').innerHTML='<p>'+escapeText(meHost?room.host_name:room.guest_name)+': <b>'+myWins+'</b> sets</p><p>'+escapeText(meHost?room.guest_name:room.host_name)+': <b>'+opWins+'</b> sets</p><p class="muted">'+tr('roomLabel',{code:room.code})+'</p><p>'+tr('firstToThree')+'</p>';
+  $('playAgain').classList.add('hidden');
+ }else{
+  $('resultTitle').textContent=my>op?tr('setWon',{set:room.set_number}):my<op?tr('setLost',{set:room.set_number}):tr('setDraw',{set:room.set_number});
+  $('resultRows').innerHTML='<p>'+tr('setScore',{you:my,opponent:op})+'</p><p>'+tr('seriesScore',{you:myWins,opponent:opWins})+'</p><p class="muted">'+tr('roomLabel',{code:room.code})+'</p><p>'+tr('firstToThree')+'</p>';
+  $('playAgain').textContent=isHost()?tr('nextSet',{set:Number(room.set_number||0)+1}):tr('waitingHost',{set:Number(room.set_number||0)+1});
+  $('playAgain').disabled=!isHost();
+  $('playAgain').classList.remove('hidden');
+ }
+ show('result');
 }
 function escapeText(value){return String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function leaveRealtime(showHome=true){
@@ -702,10 +724,10 @@ $('multiShare').onclick=async()=>{const text='Join '+multiGameNames[multiType]+'
 $('create').onclick=()=>openLobby('create');$('join').onclick=()=>openLobby('join');$('how').onclick=()=>show('howScreen');
 $('settingsOpen').onclick=openSettings;$('settingsBack').onclick=()=>show('home');$('lobbyBack').onclick=()=>leaveRealtime(true);$('howBack').onclick=()=>show('home');
 $('createRoom').onclick=createRoom;$('joinRoom').onclick=joinRoom;$('startOnline').onclick=startOnline;
-$('copyCode').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);message('lobbyMessage','Room code copied.')}catch{message('lobbyMessage','Copy the code manually: '+room.code)}};
-$('shareCode').onclick=async()=>{const text='Join my Color Clash match. Room code: '+room.code;try{if(navigator.share)await navigator.share({title:'Color Clash',text});else{await navigator.clipboard.writeText(text);message('lobbyMessage','Share message copied.')}}catch{}};
+$('copyCode').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);message('lobbyMessage',tr('codeCopied'))}catch{message('lobbyMessage',tr('manualCode',{code:room.code}))}};
+$('shareCode').onclick=async()=>{const text=tr('shareInvite',{code:room.code});try{if(navigator.share)await navigator.share({title:'Color Clash',text});else{await navigator.clipboard.writeText(text);message('lobbyMessage',tr('codeCopied'))}}catch{}};
 $('leaveRoom').onclick=()=>leaveRealtime(true);$('quitGame').onclick=()=>{if(gameMode==='online')leaveRealtime(true);else{stopTimer();show('home')}};
-$('nextRound').onclick=()=>{};$('playAgain').onclick=()=>{if(gameMode==='solo')startSolo();else show('home')};$('resultHome').onclick=()=>leaveRealtime(true);
+$('nextRound').onclick=()=>{};$('playAgain').onclick=()=>{if(gameMode==='solo')startSolo();else if(gameMode==='online'&&room&&room.status==='finished'&&Math.max(Number(room.host_wins||0),Number(room.guest_wins||0))<3&&isHost())startOnline()};$('resultHome').onclick=()=>leaveRealtime(true);
 $('saveSettings').onclick=saveSettings;$('clearSettings').onclick=()=>{localStorage.removeItem('ccSupabase');backend=null;currentUser=null;$('supabaseUrl').value='';$('supabaseKey').value='';setConnection('Solo mode available');message('settingsMessage','Connection settings cleared.')};
 $('playerName').value=localPlayerName;setBest();
 const initialConfig=getConfig();if(initialConfig){setConnection('Connecting to game server');connectBackend(initialConfig.url,initialConfig.key).catch(e=>{setConnection('Solo play available');console.warn('Supabase connection:',e.message)})}
