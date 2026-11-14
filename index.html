@@ -723,7 +723,7 @@ function applyLanguage(){
  document.body.dataset.language=language;
  const selectors=[['#solo h3','soloTitle'],['#solo p','soloDesc'],['#create h3','createTitle'],['#create p','createDesc'],['#join h3','joinTitle'],['#join p','joinDesc'],['#how h3','howTitle'],['#how p','howDesc']];
  for(const [selector,key] of selectors){const el=document.querySelector(selector);if(el)el.textContent=tr(key)}
- $('languageSelect').value=language;$('settingsOpen').textContent='⚙ '+tr('settings');
+ $('languageSelect').value=language;$('languageSelect').setAttribute('aria-label',language==='tr'?'Dil':'Language');$('settingsOpen').textContent='⚙ '+tr('settings');
  $('homeHeroTitle').innerHTML=tr('heroTitle').replace('. ','.<br><em>').replace(/\.$/,'</em>');
  $('homeHeroText').textContent=tr('heroDesc');$('chooseModeTitle').textContent=tr('chooseMode');
  $('heroTagOnline').textContent=tr('heroTagOnline');$('heroTagModes').textContent=tr('heroTagModes');$('homeFooterTag').textContent=tr('homeFooterTag');
@@ -805,7 +805,7 @@ function makeDeck(difficulty=currentDifficulty(),count=10){
  return {deck,answers};
 }
 function localizeChallenge(challenge){
- $('modeLabel').textContent=challenge.type==='find'?tr('findTitle'):challenge.type==='match'?tr('matchTitle'):tr('memoryTitle');
+ $('modeLabel').textContent=challenge.type==='find'?tr('findTitle'):challenge.type==='match'?tr('matchTitle'):tr('memoryTitle');playFx('tap');
  $('hint').textContent=challenge.type==='find'?tr('findHint'):challenge.type==='match'?tr('matchHint'):tr('memoryHint');
  if(challenge.special==='double')$('hint').textContent=tr('doubleHint');
  if(challenge.special==='reverse')$('hint').textContent=tr('reverseHint');
