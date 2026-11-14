@@ -298,7 +298,7 @@ function applyLanguage(){
  if(gameMode==='solo'&&!$('game').classList.contains('hidden')){ $('roundLabel').textContent=tr('roundOf',{current:soloRound+1,total:soloDeck.length});$('youLabel').firstChild.textContent=tr('yourScore');$('opLabel').firstChild.textContent=tr('computer');if(soloDeck[soloRound])localizeChallenge(soloDeck[soloRound])}
 }
 function stopTimer(){if(gameTimer){clearInterval(gameTimer);gameTimer=null}}
-function elapsed(){return Math.max(0,Math.min(30000,Date.now()-roundStartedAt))}
+function elapsed(){return Math.max(0,Math.min(35000,Date.now()-roundStartedAt))}
 function startTimer(onTimeout,seconds=30){
  stopTimer();const total=Math.max(5,Math.min(60,Number(seconds)||30));remaining=total;roundStartedAt=Date.now();$('timer').textContent=remaining.toFixed(1);
  gameTimer=setInterval(()=>{remaining=Math.max(0,total-(Date.now()-roundStartedAt)/1000);$('timer').textContent=remaining.toFixed(1);if(remaining<=0){stopTimer();onTimeout()}},100);
