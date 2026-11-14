@@ -269,7 +269,7 @@ const pick = a => a[rand(a.length)];
 const shuffle = a => [...a].sort(()=>Math.random()-.5);
 let backend=null, currentUser=null, room=null, roomChannel=null, eventChannel=null;
 let currentChallenge=null, powerupUsed=new Set(), audioContext=null, freezeTimeout=null;
-let powerupSetUses=0, powerupRoundUsed=false, powerupStatusLoading=false;
+let powerupSetUses=0, powerupRoundUsed=false, powerupStatusLoading=false, powerupTypesUsed=new Set();
 let gameMode='solo', soloDeck=[], soloAnswers=[], soloRound=0, soloScore=0, botScore=0;
 let gameTimer=null, roundStartedAt=0, remaining=30, roundLocked=false, multiSubmitted=false, lastRenderedRound=-1, memoryInput=[];
 let language=['en','tr'].includes(localStorage.getItem('ccLanguage'))?localStorage.getItem('ccLanguage'):'en';
@@ -605,7 +605,7 @@ function showOnlineResult(){
 }
 function escapeText(value){return String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function leaveRealtime(showHome=true){
- stopTimer();powerupSetUses=0;powerupRoundUsed=false;powerupStatusLoading=false;$('powerupBar').classList.add('hidden');$('powerupInfo').classList.add('hidden');
+ stopTimer();powerupSetUses=0;powerupRoundUsed=false;powerupStatusLoading=false;powerupTypesUsed.clear();$('powerupBar').classList.add('hidden');$('powerupInfo').classList.add('hidden');
  if(eventChannel&&backend){try{await backend.removeChannel(eventChannel)}catch{}}eventChannel=null;if(roomChannel&&backend){try{await backend.removeChannel(roomChannel)}catch{}}
  roomChannel=null;room=null;lastRenderedRound=-1;multiSubmitted=false;powerupUsed.clear();['powerExtra','powerReveal','powerFreeze'].forEach(id=>$(id).disabled=false);
  if(showHome)show('home');
@@ -911,7 +911,8 @@ function renderPowerupControls(){
  const remaining=Math.max(0,2-powerupSetUses);
  $('powerupInfo').textContent=powerupStatusLoading?tr('powerupLoading'):tr('powerupInfo')+' • '+remaining+'/2 left';
  const disabled=powerupStatusLoading||powerupRoundUsed||remaining<=0||multiSubmitted||!room||room.status!=='playing';
- ['powerExtra','powerReveal','powerFreeze'].forEach(id=>$(id).disabled=disabled);
+ const ids={powerExtra:'powerup:extra_time',powerReveal:'powerup:reveal',powerFreeze:'powerup:freeze'};
+ Object.entries(ids).forEach(([id,type])=>$(id).disabled=disabled||powerupTypesUsed.has(type));
 }
 async function loadPowerupUsage(){
  if(!backend||!currentUser||!room)return;
@@ -921,7 +922,7 @@ async function loadPowerupUsage(){
    .eq('code',code).eq('set_number',setNo).eq('actor_id',uid).like('event_type','powerup:%');
   if(error)throw error;
   if(!room||room.code!==code||room.set_number!==setNo||room.round!==roundNo||currentUser?.id!==uid)return;
-  powerupSetUses=(data||[]).length;powerupRoundUsed=(data||[]).some(e=>Number(e.round)===Number(roundNo));
+  powerupSetUses=(data||[]).length;powerupRoundUsed=(data||[]).some(e=>Number(e.round)===Number(roundNo));powerupTypesUsed=new Set((data||[]).map(e=>e.event_type));
   powerupStatusLoading=false;renderPowerupControls();
  }catch(e){powerupStatusLoading=true;renderPowerupControls();message('feedback','Power-up status unavailable: '+(e.message||e))}
 }
@@ -962,11 +963,11 @@ async function sendRoomEvent(type,payload={}){
 }
 async function usePowerup(type){
  if(gameMode!=='online'||!room||room.status!=='playing'){message('feedback',tr('onlineOnly'));return}
- if(powerupStatusLoading||powerupRoundUsed||powerupSetUses>=2||multiSubmitted||roundLocked){message('feedback',tr('powerupLimit'));return}
+ if(powerupStatusLoading||powerupRoundUsed||powerupSetUses>=2||powerupTypesUsed.has('powerup:'+type)||multiSubmitted||roundLocked){message('feedback',tr('powerupLimit'));return}
  try{
   // The database enforces the 2-per-set and 1-per-round limits before any effect is applied.
   await sendRoomEvent('powerup:'+type,{});
-  powerupSetUses++;powerupRoundUsed=true;powerupStatusLoading=false;powerupUsed.add((room.set_number||'')+':'+room.round);renderPowerupControls();
+  powerupSetUses++;powerupRoundUsed=true;powerupStatusLoading=false;powerupTypesUsed.add('powerup:'+type);powerupUsed.add((room.set_number||'')+':'+room.round);renderPowerupControls();
   if(type==='extra_time'){roundStartedAt-=5000;remaining+=5;$('timer').textContent=remaining.toFixed(1)}
   else if(type==='reveal')revealChallenge();
   message('feedback',tr('powerupUsed'));playFx('power');vibrate(40);
