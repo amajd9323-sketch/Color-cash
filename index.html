@@ -866,8 +866,9 @@ async function usePowerup(type){
 function revealChallenge(){
  const c=currentChallenge;if(!c)return;
  if(c.type==='find'){
-  const unique=c.tiles.reduce((a,v,i)=>{if(!a.includes(v))a.push(v);return a},[]);
-  c.tiles.forEach((v,i)=>{if(unique.indexOf(v)>0||c.special==='double'&&v!==unique[0])$('gameContent').querySelectorAll('.tile')[i]?.classList.add('revealed')});
+  const counts={};c.tiles.forEach(v=>counts[v]=(counts[v]||0)+1);
+  const min=Math.min(...Object.values(counts));
+  c.tiles.forEach((v,i)=>{if(counts[v]===min)$('gameContent').querySelectorAll('.tile')[i]?.classList.add('revealed')});
  }else if(c.type==='match'){
   const answer=c.correctColor||c.target;
   const buttons=[...$('gameContent').querySelectorAll('.choice')];const idx=c.options.indexOf(answer);if(idx>=0)buttons[idx]?.classList.add('revealed');
