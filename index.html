@@ -1009,10 +1009,12 @@ function showOnlineResult(){
 }
 function escapeText(value){return String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function leaveRealtime(showHome=true){
- stopTimer();powerupSetUses=0;powerupRoundUsed=false;powerupStatusLoading=false;powerupTypesUsed.clear();powerupTimeBonus=0;frozenUntil=0;$('powerupBar').classList.add('hidden');$('powerupInfo').classList.add('hidden');
- if(eventChannel&&backend){try{await backend.removeChannel(eventChannel)}catch{}}eventChannel=null;if(roomChannel&&backend){try{await backend.removeChannel(roomChannel)}catch{}}
- roomChannel=null;room=null;lastRenderedRound=-1;multiSubmitted=false;powerupUsed.clear();['powerExtra','powerReveal','powerFreeze'].forEach(id=>$(id).disabled=false);
+ stopTimer();if(soloAdvanceTimeout){clearTimeout(soloAdvanceTimeout);soloAdvanceTimeout=null;}
+ powerupSetUses=0;powerupRoundUsed=false;powerupStatusLoading=false;powerupTypesUsed.clear();powerupTimeBonus=0;frozenUntil=0;$('powerupBar').classList.add('hidden');$('powerupInfo').classList.add('hidden');
+ const db=backend,channels=[eventChannel,roomChannel].filter(Boolean);eventChannel=null;roomChannel=null;room=null;lastRenderedRound=-1;multiSubmitted=false;powerupUsed.clear();['powerExtra','powerReveal','powerFreeze'].forEach(id=>$(id).disabled=false);
+ // Change screens immediately; network channel cleanup must never block the exit button.
  if(showHome)show('home');
+ if(db&&channels.length)await Promise.allSettled(channels.map(async channel=>{try{await db.removeChannel(channel)}catch(e){console.warn('Room channel cleanup:',e?.message||e)}}));
 }
 function openSettings(){
  const cfg=getConfig();$('supabaseUrl').value=cfg?.url||'';$('supabaseKey').value=cfg?.key||'';message('settingsMessage','');show('settings');
@@ -1214,8 +1216,8 @@ async function pickPenaltyDirection(direction){
  catch(e){message('multiGameMessage','Choice was not recorded: '+(e.message||e))}
 }
 async function leaveMultiRoom(){
- if(multiChannel&&backend){try{await backend.removeChannel(multiChannel)}catch{}}
- multiChannel=null;multiRoom=null;multiPenaltySubmittedKick=-1;multiPlantResolving=false;show('home');
+ const channel=multiChannel,db=backend;multiChannel=null;multiRoom=null;multiPenaltySubmittedKick=-1;multiPlantResolving=false;show('home');
+ if(channel&&db){try{await db.removeChannel(channel)}catch(e){console.warn('Game channel cleanup:',e?.message||e)}}
 }
 
 
@@ -1405,9 +1407,9 @@ function sendReaction(emoji){
 
 $('solo').onclick=startSolo;
 
-$('openXO').onclick=()=>openMultiLobby('xo');
-$('openPlant').onclick=()=>openMultiLobby('plant');
-$('openPenalty').onclick=()=>openMultiLobby('penalty');
+$('openXO')?.addEventListener('click',()=>openMultiLobby('xo'));
+$('openPlant')?.addEventListener('click',()=>openMultiLobby('plant'));
+$('openPenalty')?.addEventListener('click',()=>openMultiLobby('penalty'));
 $('multiLobbyBack').onclick=leaveMultiRoom;
 $('multiGameHome').onclick=leaveMultiRoom;
 $('multiQuit').onclick=leaveMultiRoom;
@@ -1429,7 +1431,7 @@ $('saveSettings').onclick=saveSettings;$('clearSettings').onclick=()=>{localStor
 $('playerName').value=localPlayerName;setBest();
 $('languageSelect').value=language;
 $('difficultySelect').value=localStorage.getItem('ccDifficulty')||'normal';
-$('languageSelect').onchange=()=>{language=$('languageSelect').value;localStorage.setItem('ccLanguage',language);applyLanguage()};
+$('languageSelect').addEventListener('change',event=>{const selected=event.target.value;if(!Object.prototype.hasOwnProperty.call(LANG,selected))return;language=selected;try{localStorage.setItem('ccLanguage',language)}catch(e){console.warn('Language preference could not be saved:',e)}applyLanguage()});
 $('saveProfile').onclick=saveProfile;$('addFriend').onclick=addFriend;
 $('avatarSelect').onchange=saveLocalPrefs;$('themeSelect').onchange=saveLocalPrefs;
 $('profileName').value=localPlayerName;
@@ -1438,6 +1440,37 @@ $('vibrationToggle').onclick=()=>{const p=prefs();p.vibrate=p.vibrate===false?tr
 $('powerupInfo').textContent=tr('powerupInfo');
 $('powerExtra').onclick=()=>usePowerup('extra_time');$('powerReveal').onclick=()=>usePowerup('reveal');$('powerFreeze').onclick=()=>usePowerup('freeze');
 document.querySelectorAll('[data-reaction]').forEach(b=>b.onclick=()=>sendReaction(b.dataset.reaction));
+
+function handlePhoneBack(){
+ const active=screens.find(id=>!$(id).classList.contains('hidden'))||'home';
+ if(active==='home')return;
+ if(active==='game'){
+  if(gameMode==='online'){leaveRealtime(true);return}
+  if(soloAdvanceTimeout){clearTimeout(soloAdvanceTimeout);soloAdvanceTimeout=null;}
+  stopTimer();show('home');return;
+ }
+ if(active==='result'){
+  if(gameMode==='online')leaveRealtime(true);else show('home');
+  return;
+ }
+ if(active==='lobby'){leaveRealtime(true);return}
+ if(active==='multiLobby'||active==='multiGame'){leaveMultiRoom();return}
+ show('home');
+}
+function installPhoneBackNavigation(){
+ try{
+  history.replaceState({colorClashRoot:true},'',location.href);
+  history.pushState({colorClashGuard:true},'',location.href);
+ }catch(e){console.warn('Back navigation guard unavailable:',e)}
+ window.addEventListener('popstate',()=>{
+  handlePhoneBack();
+  try{history.pushState({colorClashGuard:true},'',location.href)}catch(e){console.warn('Could not restore app history:',e)}
+ });
+ // Also support Android WebViews that dispatch the legacy backbutton event.
+ document.addEventListener('backbutton',event=>{event.preventDefault?.();handlePhoneBack()},false);
+}
+
+installPhoneBackNavigation();
 applyPrefs();
 $('difficultySelect').onchange=()=>localStorage.setItem('ccDifficulty',$('difficultySelect').value);
 applyLanguage();
