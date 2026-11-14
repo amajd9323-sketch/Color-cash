@@ -10,6 +10,17 @@
 <title>Color Clash</title>
 <style>
 :root{color-scheme:dark;--bg:#090b16;--panel:#141a2d;--line:#2a3551;--cyan:#45e6ff;--pink:#ff4fa3;--purple:#9b7bff;--green:#55efad;--muted:#9aa4c4}
+body[data-theme="sunset"]{--bg:#180d1b;--panel:#2b1728;--line:#66334d;--cyan:#ffb35c;--pink:#ff668e;--purple:#cf7bff}
+body[data-theme="ocean"]{--bg:#061724;--panel:#0d2638;--line:#1c526d;--cyan:#49e4ff;--pink:#54b7ff;--purple:#728dff}
+body[data-theme="forest"]{--bg:#09170f;--panel:#14271b;--line:#31543b;--cyan:#75efad;--pink:#b6e66a;--purple:#7bd3a0}
+body[data-theme="candy"]{--bg:#1b0b20;--panel:#2a1537;--line:#5a2e75;--cyan:#64e9ff;--pink:#ff72c5;--purple:#c08cff}
+.profile-panel{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#ffffff08,transparent)}
+.profile-panel h3{margin-top:0}.profile-panel .row{margin:10px 0}.profile-panel .field{max-width:180px}
+.friends-list{display:grid;gap:8px;margin-top:10px}.friend-item{padding:10px;border:1px solid var(--line);border-radius:12px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.powerup-bar,.reaction-bar{justify-content:center;flex-wrap:wrap;margin:12px 0}.powerup-bar button,.reaction-bar button{min-width:78px}
+.tile.selected{outline:4px solid white;outline-offset:2px;transform:scale(.94)}
+.tile.revealed,.choice.revealed{outline:4px solid #fff;outline-offset:3px;box-shadow:0 0 24px #fff}
+.hidden{display:none!important}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% 0,#24204b,transparent 40%),var(--bg);color:#f4f6ff;font-family:system-ui,Arial,sans-serif;min-height:100vh}
 button,input{font:inherit}button{cursor:pointer;border:0;color:inherit;touch-action:manipulation}button:disabled{cursor:not-allowed;opacity:.55}
 .wrap{max-width:780px;margin:auto;padding:16px 15px 42px}.top,.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.top{min-height:45px}
@@ -90,6 +101,15 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
   <div class="difficulty-row"><label id="difficultyLabel" for="difficultySelect">Difficulty</label><select class="field" id="difficultySelect"><option value="relaxed">Relaxed · 35 sec</option><option value="normal">Normal · 30 sec</option><option value="hard">Hard · 25 sec</option><option value="extreme">Extreme · 20 sec</option></select></div>
   <div class="row" style="margin-top:18px"><span class="muted" id="best">Best Score: 0</span><span class="muted" id="roundTypesNote">15 rounds • 3 challenge types</span></div>
   <p id="seriesHint" class="muted center" style="font-size:13px;margin:12px 0 0">Online series: 10 rounds per set. First player to win 3 sets wins.</p>
+  <div class="profile-panel" id="profilePanel">
+   <h3 id="profileTitle">Player Profile</h3>
+   <div class="row"><label id="avatarLabel" for="avatarSelect">Avatar</label><select class="field" id="avatarSelect"><option>🟦</option><option>🟥</option><option>🟩</option><option>🟨</option><option>🐱</option><option>🦊</option><option>🐼</option><option>🐸</option><option>👾</option><option>🤖</option></select></div>
+   <div class="row"><label id="themeLabel" for="themeSelect">Theme</label><select class="field" id="themeSelect"><option value="neon">Neon</option><option value="sunset">Sunset</option><option value="ocean">Ocean</option><option value="forest">Forest</option><option value="candy">Candy</option></select></div>
+   <div class="actions"><button class="secondary" id="saveProfile">Save Profile</button><button class="secondary" id="soundToggle">🔊 Sound: On</button><button class="secondary" id="vibrationToggle">📳 Vibration: On</button></div>
+   <p class="muted" id="friendCodeLabel">Your Friend Code</p><div class="code" id="friendCode">--------</div>
+   <div class="row"><input class="field" id="friendCodeInput" maxlength="8" placeholder="Friend code"><button class="secondary" id="addFriend">Add Friend</button></div>
+   <p id="profileMessage" class="statusline"></p><div id="friendsList" class="friends-list"></div>
+  </div>
 
   <hr>
   <h2 class="center multi-title">🎮 Online Multiplayer Games</h2>
@@ -135,6 +155,11 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
   <div class="bar"><i id="progress"></i></div>
   <div class="row" style="margin-top:14px"><div class="scorebox" id="youLabel">Your Score<strong id="youScore">0</strong></div><div class="scorebox" id="opLabel">Opponent<strong id="opScore">0</strong></div></div>
   <p id="seriesScore" class="center muted hidden"></p>
+  <div class="actions powerup-bar" id="powerupBar">
+   <button class="secondary" id="powerExtra">⏱ +8s</button><button class="secondary" id="powerReveal">🔎 Reveal</button><button class="secondary" id="powerFreeze">❄️ Freeze</button>
+  </div>
+  <div class="actions reaction-bar" id="reactionBar"><button class="secondary" data-reaction="🔥">🔥</button><button class="secondary" data-reaction="😂">😂</button><button class="secondary" data-reaction="👏">👏</button><button class="secondary" data-reaction="😈">😈</button><button class="secondary" data-reaction="❤️">❤️</button></div>
+  <p id="reactionNotice" class="center statusline"></p>
   <h3 id="modeLabel" class="center"></h3><p id="hint" class="center muted"></p>
   <div id="gameContent"></div>
   <div class="center"><p id="feedback" class="statusline"></p><button class="primary hidden" id="nextRound">Next Round →</button></div>
