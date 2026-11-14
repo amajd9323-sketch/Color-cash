@@ -294,75 +294,84 @@ function applyLanguage(){
  if(gameMode==='solo'&&!$('game').classList.contains('hidden')){ $('roundLabel').textContent=tr('roundOf',{current:soloRound+1,total:soloDeck.length});$('youLabel').firstChild.textContent=tr('yourScore');$('opLabel').firstChild.textContent=tr('computer');if(soloDeck[soloRound])localizeChallenge(soloDeck[soloRound])}
 }
 function stopTimer(){if(gameTimer){clearInterval(gameTimer);gameTimer=null}}
-function elapsed(){return Math.max(0,Math.min(20000,Date.now()-roundStartedAt))}
-function startTimer(onTimeout){
- stopTimer();remaining=20;roundStartedAt=Date.now();$('timer').textContent='20.0';
- gameTimer=setInterval(()=>{remaining=Math.max(0,20-(Date.now()-roundStartedAt)/1000);$('timer').textContent=remaining.toFixed(1);if(remaining<=0){stopTimer();onTimeout()}},100);
+function elapsed(){return Math.max(0,Math.min(30000,Date.now()-roundStartedAt))}
+function startTimer(onTimeout,seconds=30){
+ stopTimer();const total=Math.max(5,Math.min(60,Number(seconds)||30));remaining=total;roundStartedAt=Date.now();$('timer').textContent=remaining.toFixed(1);
+ gameTimer=setInterval(()=>{remaining=Math.max(0,total-(Date.now()-roundStartedAt)/1000);$('timer').textContent=remaining.toFixed(1);if(remaining<=0){stopTimer();onTimeout()}},100);
 }
-function setBest(){$('best').textContent='Best Score: '+(Number(localStorage.getItem('ccBest')||0))}
-function makeDeck(){
- const deck=[],answers=[];
- for(let r=0;r<10;r++){
+function setBest(){$('best').textContent=tr('bestScore')+': '+(Number(localStorage.getItem('ccBest')||0))}
+function currentDifficulty(){return $('difficultySelect')?.value||localStorage.getItem('ccDifficulty')||'normal'}
+function makeDeck(difficulty=currentDifficulty(),count=10){
+ const presets={
+  relaxed:{seconds:35,side:4,options:4,palette:4,sequence:3},
+  normal:{seconds:30,side:5,options:4,palette:5,sequence:5},
+  hard:{seconds:25,side:6,options:6,palette:6,sequence:7},
+  extreme:{seconds:20,side:7,options:8,palette:8,sequence:9}
+ };
+ const cfg=presets[difficulty]||presets.normal,deck=[],answers=[];
+ for(let r=0;r<count;r++){
   const type=r%3;
   if(type===0){
    const base=pick(colors);let diff=pick(colors);while(diff===base)diff=pick(colors);
-   const answer=rand(25),tiles=Array.from({length:25},(_,i)=>i===answer?diff:base);
-   deck.push({type:'find',tiles});answers.push(String(answer));
+   const total=cfg.side*cfg.side,answer=rand(total),tiles=Array.from({length:total},(_,i)=>i===answer?diff:base);
+   deck.push({type:'find',tiles,boardSide:cfg.side,timeLimit:cfg.seconds,difficulty});answers.push(String(answer));
   }else if(type===1){
    const target=pick(colors),opts=[target];
-   while(opts.length<4){const c=pick(colors);if(!opts.includes(c))opts.push(c)}
-   const options=shuffle(opts);deck.push({type:'match',target,options});answers.push(target);
+   while(opts.length<cfg.options){const c=pick(colors);if(!opts.includes(c))opts.push(c)}
+   const options=shuffle(opts);deck.push({type:'match',target,options,timeLimit:cfg.seconds,difficulty});answers.push(target);
   }else{
-   const palette=colors.slice(0,4),sequence=Array.from({length:4},()=>rand(4));
-   deck.push({type:'memory',palette,sequence});answers.push(sequence.join(','));
+   const palette=colors.slice(0,cfg.palette),sequence=Array.from({length:cfg.sequence},()=>rand(cfg.palette));
+   deck.push({type:'memory',palette,sequence,timeLimit:cfg.seconds,difficulty});answers.push(sequence.join(','));
   }
  }
  return {deck,answers};
 }
+function localizeChallenge(challenge){
+ $('modeLabel').textContent=challenge.type==='find'?tr('findTitle'):challenge.type==='match'?tr('matchTitle'):tr('memoryTitle');
+ $('hint').textContent=challenge.type==='find'?tr('findHint'):challenge.type==='match'?tr('matchHint'):tr('memoryHint');
+}
 function renderChallenge(challenge,submit){
  roundLocked=false;memoryInput=[];$('gameContent').innerHTML='';$('nextRound').classList.add('hidden');message('feedback','');
- const title=challenge.type==='find'?'Find the Odd Color':challenge.type==='match'?'Color Match':'Memory Challenge';
- $('modeLabel').textContent=title;
+ localizeChallenge(challenge);
  if(challenge.type==='find'){
-  $('hint').textContent='Choose the tile that is different from the others.';
-  const grid=document.createElement('div');grid.className='tiles';challenge.tiles.forEach((color,i)=>{const b=document.createElement('button');b.className='tile';b.style.background=color;b.setAttribute('aria-label','Tile '+(i+1));b.onclick=()=>submit(String(i));grid.appendChild(b)});$('gameContent').appendChild(grid);
+  const grid=document.createElement('div');grid.className='tiles';grid.style.gridTemplateColumns='repeat('+(challenge.boardSide||5)+',minmax(0,1fr))';grid.style.maxWidth='560px';grid.style.margin='16px auto';
+  challenge.tiles.forEach((color,i)=>{const b=document.createElement('button');b.className='tile';b.style.background=color;b.setAttribute('aria-label','Tile '+(i+1));b.onclick=()=>submit(String(i));grid.appendChild(b)});$('gameContent').appendChild(grid);
  }else if(challenge.type==='match'){
-  $('hint').textContent='Choose the exact color that matches the target.';
-  const target=document.createElement('div');target.className='target';target.style.background=challenge.target;target.textContent='Target Color';$('gameContent').appendChild(target);
+  const target=document.createElement('div');target.className='target';target.style.background=challenge.target;target.textContent=tr('target');$('gameContent').appendChild(target);
   const palette=document.createElement('div');palette.className='palette';challenge.options.forEach(color=>{const b=document.createElement('button');b.className='choice';b.style.background=color;b.setAttribute('aria-label','Choose a color');b.onclick=()=>submit(color);palette.appendChild(b)});$('gameContent').appendChild(palette);
  }else{
-  $('hint').textContent='Memorize the sequence, then tap the colors in the same order.';
-  const palette=document.createElement('div');palette.className='palette';challenge.palette.forEach((color,i)=>{const b=document.createElement('button');b.className='choice';b.style.background=color;b.disabled=true;b.onclick=()=>{memoryInput.push(i);b.classList.add('memory-on');setTimeout(()=>b.classList.remove('memory-on'),180);if(memoryInput.length===challenge.sequence.length)submit(memoryInput.join(','))};palette.appendChild(b)});$('gameContent').appendChild(palette);
-  const info=document.createElement('p');info.className='center muted';info.id='memoryInfo';info.textContent='Watch the colors...';$('gameContent').appendChild(info);
-  let step=0;const flash=()=>{if(step>=challenge.sequence.length){info.textContent='Your turn!';palette.querySelectorAll('button').forEach(b=>b.disabled=false);return}
-   const btn=palette.children[challenge.sequence[step]];btn.classList.add('memory-on');setTimeout(()=>btn.classList.remove('memory-on'),410);step++;setTimeout(flash,660)
+  const palette=document.createElement('div');palette.className='palette';palette.style.gridTemplateColumns='repeat('+Math.min(4,challenge.palette.length)+',minmax(0,1fr))';
+  challenge.palette.forEach((color,i)=>{const b=document.createElement('button');b.className='choice';b.style.background=color;b.disabled=true;b.onclick=()=>{memoryInput.push(i);b.classList.add('memory-on');setTimeout(()=>b.classList.remove('memory-on'),180);if(memoryInput.length===challenge.sequence.length)submit(memoryInput.join(','))};palette.appendChild(b)});$('gameContent').appendChild(palette);
+  const info=document.createElement('p');info.className='center muted';info.id='memoryInfo';info.textContent=tr('watchColors');$('gameContent').appendChild(info);
+  let step=0;const flash=()=>{if(step>=challenge.sequence.length){info.textContent=tr('yourTurn');palette.querySelectorAll('button').forEach(b=>b.disabled=false);return}
+   const btn=palette.children[challenge.sequence[step]];btn.classList.add('memory-on');setTimeout(()=>btn.classList.remove('memory-on'),410);step++;setTimeout(flash,590);
   };setTimeout(flash,450);
  }
 }
 function updateScores(a,b){$('youScore').textContent=a;$('opScore').textContent=b}
 function startSolo(){
- leaveRealtime(false);gameMode='solo';const built=makeDeck();soloDeck=built.deck;soloAnswers=built.answers;soloRound=0;soloScore=0;botScore=0;show('game');renderSoloRound();
+ leaveRealtime(false);gameMode='solo';const built=makeDeck(currentDifficulty(),15);soloDeck=built.deck;soloAnswers=built.answers;soloRound=0;soloScore=0;botScore=0;show('game');renderSoloRound();
 }
 function renderSoloRound(){
- if(soloRound>=10){finishSolo();return}
- $('roundLabel').textContent='Round '+(soloRound+1)+' / 10';$('progress').style.width=(soloRound*10)+'%';
- $('youLabel').firstChild.textContent='Your Score';$('opLabel').firstChild.textContent='Computer';updateScores(soloScore,botScore);
+ if(soloRound>=soloDeck.length){finishSolo();return}
+ $('roundLabel').textContent=tr('roundOf',{current:soloRound+1,total:soloDeck.length});$('progress').style.width=(soloRound/soloDeck.length*100)+'%';
+ $('youLabel').firstChild.textContent=tr('yourScore');$('opLabel').firstChild.textContent=tr('computer');$('seriesScore').classList.add('hidden');updateScores(soloScore,botScore);
  const expected=soloAnswers[soloRound];
  renderChallenge(soloDeck[soloRound],answer=>{if(roundLocked)return;const correct=String(answer)===expected;finishSoloRound(correct)});
- startTimer(()=>finishSoloRound(false,true));
+ startTimer(()=>finishSoloRound(false,true),soloDeck[soloRound].timeLimit||30);
 }
 function finishSoloRound(correct,timedOut=false){
  if(roundLocked)return;roundLocked=true;stopTimer();
  const points=correct?Math.max(10,Math.round(100+remaining*8)):0;
  soloScore+=points;botScore+=rand(45)+20;updateScores(soloScore,botScore);
  $('gameContent').querySelectorAll('button').forEach(b=>b.disabled=true);
- message('feedback',timedOut?'Time is up!':correct?'Correct! +'+points+' points':'Incorrect answer. Try again next round.');
+ message('feedback',timedOut?tr('timeUp'):correct?tr('correct',{points}):tr('wrong'));
  $('nextRound').classList.remove('hidden');$('nextRound').onclick=()=>{soloRound++;renderSoloRound()};
 }
 function finishSolo(){
  stopTimer();localStorage.setItem('ccBest',String(Math.max(Number(localStorage.getItem('ccBest')||0),soloScore)));setBest();
- $('finalScore').textContent=soloScore;$('resultTitle').textContent=soloScore>=botScore?'You beat the computer!':'The computer won this time';
- $('resultRows').innerHTML='<p>Your Score: <b>'+soloScore+'</b></p><p>Computer score: <b>'+botScore+'</b></p>';show('result');
+ $('finalScore').textContent=soloScore;$('resultTitle').textContent=soloScore>=botScore?tr('youBeatComputer'):tr('computerWon');
+ $('resultRows').innerHTML=tr('soloResultRows',{you:soloScore,opponent:botScore});$('playAgain').classList.remove('hidden');$('playAgain').disabled=false;show('result');
 }
 
 function getConfig(){try{return JSON.parse(localStorage.getItem('ccSupabase')||'null')||DEFAULT_SUPABASE_CONFIG}catch{return DEFAULT_SUPABASE_CONFIG}}
