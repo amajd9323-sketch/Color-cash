@@ -752,7 +752,7 @@ function applyLanguage(){
  $('createRoom').textContent=tr('createRoom');$('joinRoom').textContent=tr('joinRoom');$('copyCode').textContent=tr('copyCode');$('shareCode').textContent=tr('share');$('leaveRoom').textContent=tr('leaveRoom');$('startOnline').textContent=tr('startMatch');
  $('quitGame').textContent=tr('exit');$('nextRound').textContent=tr('nextRound');$('playAgain').textContent=tr('playAgain');$('resultHome').textContent=tr('home');
  $('connection').textContent='● '+tr(connectionKeys[connectionMessage]||connectionMessage);
- if(!$('lobby').classList.contains('hidden'))$('lobbyTitle').textContent=$('createControls').classList.contains('hidden')?tr('joinRoomTitle'):tr('createRoomTitle');
+ if(!$('lobby').classList.contains('hidden')){const roomKind=room?(isHost()?'createRoomTitle':'joinRoomTitle'):($('joinControls').classList.contains('hidden')?'createRoomTitle':'joinRoomTitle');$('lobbyTitle').textContent=tr(roomKind)}
  if(room&&room.status==='waiting')renderLobby();
  if(room&&room.status==='playing'){handleRoomLabels();if(room.deck?.[room.round])localizeChallenge(room.deck[room.round])}
  if(room&&room.status==='finished')showOnlineResult();
