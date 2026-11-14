@@ -109,7 +109,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
    <div class="actions"><button class="secondary" id="saveProfile">Save Profile</button><button class="secondary" id="soundToggle">🔊 Sound: On</button><button class="secondary" id="vibrationToggle">📳 Vibration: On</button></div>
    <p class="muted" id="friendCodeLabel">Your Friend Code</p><div class="code" id="friendCode">--------</div>
    <div class="row"><input class="field" id="friendCodeInput" maxlength="8" placeholder="Friend code"><button class="secondary" id="addFriend">Add Friend</button></div>
-   <p id="profileMessage" class="statusline"></p><div id="friendsList" class="friends-list"></div>
+   <p id="profileMessage" class="statusline"></p><div id="friendRequests" class="friends-list"></div><div id="friendsList" class="friends-list"></div>
   </div>
 
   <hr>
@@ -274,7 +274,7 @@ en:{
  preparingSet:'Preparing set {set}...',submitWaiting:'Your answer was submitted. Waiting for your opponent...',correctWaiting:'Correct! +{points} points. Waiting for the other player.',answerWaiting:'Answer locked. Waiting for the other player.',
  setWon:'You won Set {set}!',setLost:'Your friend won Set {set}.',setDraw:'Set {set} is a draw!',seriesWon:'YOU WON THE SERIES!',seriesLost:'Your friend won the series.',nextSet:'Play Set {set}',waitingHost:'Waiting for host to start Set {set}',
  seriesScore:'Series wins — You: {you} | Opponent: {opponent}',setScore:'Set score — You: {you} | Opponent: {opponent}',firstToThree:'First player to 3 set wins takes the series.',roomLabel:'Room: {code}',
- profileTitle:'Player Profile',profileName:'Display Name',avatar:'Avatar',theme:'Theme',saveProfile:'Save Profile',soundOn:'🔊 Sound: On',soundOff:'🔇 Sound: Off',vibrationOn:'📳 Vibration: On',vibrationOff:'📴 Vibration: Off',yourFriendCode:'Your Friend Code',friendCodePlaceholder:'Friend code',addFriend:'Add Friend',noFriends:'No friends added yet.',inviteFriend:'Copy code',profileSaved:'Profile saved!',friendAdded:'Friend added!',friendRequestSent:'Friend request sent.',friendCodeCopied:'Friend code copied.',onlineOnly:'Available in online rooms only.',powerUsed:'Power-up activated!',frozen:'Frozen! You cannot answer for a moment.',freezeEnded:'You can play again!',opponentReaction:'Your opponent reacted!',doubleHint:'SPECIAL: Find BOTH different tiles.',reverseHint:'SPECIAL: Watch the sequence, then enter it in REVERSE order.',closeHint:'SPECIAL: Pick the color that is almost identical to the target.',
+ profileTitle:'Player Profile',profileName:'Display Name',avatar:'Avatar',theme:'Theme',saveProfile:'Save Profile',soundOn:'🔊 Sound: On',soundOff:'🔇 Sound: Off',vibrationOn:'📳 Vibration: On',vibrationOff:'📴 Vibration: Off',yourFriendCode:'Your Friend Code',friendCodePlaceholder:'Friend code',addFriend:'Add Friend',noFriends:'No friends added yet.',inviteFriend:'Copy code',profileSaved:'Profile saved!',friendAdded:'Friend added!',friendRequestSent:'Friend request sent.',friendCodeCopied:'Friend code copied.',incomingRequests:'Friend Requests',friendRequestFrom:'Request from',accept:'Accept',roomInvite:'Join my Color Clash room: {code}',roomInviteCopied:'Room invite copied.',onlineOnly:'Available in online rooms only.',powerUsed:'Power-up activated!',frozen:'Frozen! You cannot answer for a moment.',freezeEnded:'You can play again!',opponentReaction:'Your opponent reacted!',doubleHint:'SPECIAL: Find BOTH different tiles.',reverseHint:'SPECIAL: Watch the sequence, then enter it in REVERSE order.',closeHint:'SPECIAL: Pick the color that is almost identical to the target.',
  connectedSuccessfully:'Connected successfully. You can now create a room or join a friend.'
 },
 tr:{
@@ -294,7 +294,7 @@ tr:{
  preparingSet:'{set}. set hazırlanıyor...',submitWaiting:'Cevabın gönderildi. Rakip bekleniyor...',correctWaiting:'Doğru! +{points} puan. Diğer oyuncu bekleniyor.',answerWaiting:'Cevap kilitlendi. Diğer oyuncu bekleniyor.',
  setWon:'{set}. seti kazandın!',setLost:'Arkadaşın {set}. seti kazandı.',setDraw:'{set}. set berabere!',seriesWon:'SERİYİ KAZANDIN!',seriesLost:'Arkadaşın seriyi kazandı.',nextSet:'{set}. Sete Başla',waitingHost:'Ev sahibinin {set}. seti başlatması bekleniyor',
  seriesScore:'Seri galibiyetleri — Sen: {you} | Rakip: {opponent}',setScore:'Set skoru — Sen: {you} | Rakip: {opponent}',firstToThree:'İlk 3 seti kazanan seriyi kazanır.',roomLabel:'Oda: {code}',
- profileTitle:'Oyuncu Profili',profileName:'Görünen Ad',avatar:'Avatar',theme:'Tema',saveProfile:'Profili Kaydet',soundOn:'🔊 Ses: Açık',soundOff:'🔇 Ses: Kapalı',vibrationOn:'📳 Titreşim: Açık',vibrationOff:'📴 Titreşim: Kapalı',yourFriendCode:'Arkadaş Kodun',friendCodePlaceholder:'Arkadaş kodu',addFriend:'Arkadaş Ekle',noFriends:'Henüz arkadaş eklenmedi.',inviteFriend:'Kodu Kopyala',profileSaved:'Profil kaydedildi!',friendAdded:'Arkadaş eklendi!',friendRequestSent:'Arkadaşlık isteği gönderildi.',friendCodeCopied:'Arkadaş kodu kopyalandı.',onlineOnly:'Yalnızca çevrimiçi odalarda kullanılabilir.',powerUsed:'Güçlendirici etkinleştirildi!',frozen:'Donduruldun! Bir süre cevap veremezsin.',freezeEnded:'Tekrar oynayabilirsin!',opponentReaction:'Rakibin tepki gönderdi!',doubleHint:'ÖZEL: Farklı olan İKİ kareyi bul.',reverseHint:'ÖZEL: Renk sırasını izle ve TERSİNDEN gir.',closeHint:'ÖZEL: Hedef renge neredeyse aynı olan rengi seç.',
+ profileTitle:'Oyuncu Profili',profileName:'Görünen Ad',avatar:'Avatar',theme:'Tema',saveProfile:'Profili Kaydet',soundOn:'🔊 Ses: Açık',soundOff:'🔇 Ses: Kapalı',vibrationOn:'📳 Titreşim: Açık',vibrationOff:'📴 Titreşim: Kapalı',yourFriendCode:'Arkadaş Kodun',friendCodePlaceholder:'Arkadaş kodu',addFriend:'Arkadaş Ekle',noFriends:'Henüz arkadaş eklenmedi.',inviteFriend:'Kodu Kopyala',profileSaved:'Profil kaydedildi!',friendAdded:'Arkadaş eklendi!',friendRequestSent:'Arkadaşlık isteği gönderildi.',friendCodeCopied:'Arkadaş kodu kopyalandı.',incomingRequests:'Arkadaşlık İstekleri',friendRequestFrom:'İstek gönderen',accept:'Kabul Et',roomInvite:'Color Clash odama katıl: {code}',roomInviteCopied:'Oda daveti kopyalandı.',onlineOnly:'Yalnızca çevrimiçi odalarda kullanılabilir.',powerUsed:'Güçlendirici etkinleştirildi!',frozen:'Donduruldun! Bir süre cevap veremezsin.',freezeEnded:'Tekrar oynayabilirsin!',opponentReaction:'Rakibin tepki gönderdi!',doubleHint:'ÖZEL: Farklı olan İKİ kareyi bul.',reverseHint:'ÖZEL: Renk sırasını izle ve TERSİNDEN gir.',closeHint:'ÖZEL: Hedef renge neredeyse aynı olan rengi seç.',
  connectedSuccessfully:'Bağlantı başarılı. Artık oda oluşturabilir veya arkadaşına katılabilirsin.'
 }
 };
@@ -522,7 +522,7 @@ async function startOnline(){
 async function submitMulti(answer){
  if(multiSubmitted||!room||room.status!=='playing')return;
  multiSubmitted=true;const submittedRound=room.round;stopTimer();const spent=elapsed();
- $('gameContent').querySelectorAll('button').forEach(b=>b.disabled=true);message('feedback',tr('submitWaiting'));
+ $('gameContent').querySelectorAll('button').forEach(b=>b.disabled=true);message('feedback',tr('submitWaiting'));playFx('tap');vibrate(20);
  try{
   const db=await requireBackend();const {data,error}=await db.rpc('cc_submit_answer',{p_code:room.code,p_answer:String(answer),p_elapsed_ms:spent});if(error)throw error;
   await refreshRoom();
@@ -792,7 +792,17 @@ async function loadProfile(){
  $('avatarSelect').value=data.avatar||'🟦';$('themeSelect').value=data.theme||'neon';
  const {data:friends,error:friendsError}=await backend.rpc('cc_friends_list');if(friendsError)throw friendsError;
  renderFriends(friends||[]);
+ const {data:requests,error:requestError}=await backend.from('cc_friend_requests').select('id,sender_id').eq('receiver_id',currentUser.id).eq('status','pending');
+ if(requestError)throw requestError;renderFriendRequests(requests||[]);
  applyPrefs();
+}
+function renderFriendRequests(requests){
+ const root=$('friendRequests');root.innerHTML='';
+ if(!requests.length)return;
+ const heading=document.createElement('p');heading.className='muted';heading.textContent=tr('incomingRequests');root.appendChild(heading);
+ requests.forEach(req=>{const row=document.createElement('div');row.className='friend-item';const label=document.createElement('span');label.textContent=tr('friendRequestFrom')+' '+String(req.sender_id).slice(0,8);
+ const accept=document.createElement('button');accept.className='secondary';accept.textContent=tr('accept');accept.onclick=async()=>{try{const {error}=await backend.rpc('cc_friend_accept',{p_request_id:req.id});if(error)throw error;await loadProfile();message('profileMessage',tr('friendAdded'))}catch(e){message('profileMessage',e.message||String(e))}};
+ row.append(label,accept);root.appendChild(row)});
 }
 function renderFriends(friends){
  const root=$('friendsList');root.innerHTML='';
@@ -801,7 +811,7 @@ function renderFriends(friends){
   const row=document.createElement('div');row.className='friend-item';
   const label=document.createElement('span');label.textContent=(friend.avatar||'🟦')+' '+friend.display_name+' · '+friend.friend_code;
   const invite=document.createElement('button');invite.className='secondary';invite.textContent=tr('inviteFriend');
-  invite.onclick=async()=>{try{await navigator.clipboard.writeText(friend.friend_code);message('profileMessage',tr('friendCodeCopied'))}catch{message('profileMessage',friend.friend_code)}};
+  invite.onclick=async()=>{const inviteText=room&&gameMode==='online'?tr('roomInvite',{code:room.code}):friend.friend_code;try{if(navigator.share&&room&&gameMode==='online')await navigator.share({title:'Color Clash',text:inviteText});else{await navigator.clipboard.writeText(inviteText);message('profileMessage',room&&gameMode==='online'?tr('roomInviteCopied'):tr('friendCodeCopied'))}}catch{message('profileMessage',inviteText)}};
   row.append(label,invite);root.appendChild(row);
  });
 }
