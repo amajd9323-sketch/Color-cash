@@ -1,4 +1,4 @@
-const CACHE_NAME = 'color-clash-v10-language-auto-next';
+const CACHE_NAME = 'color-clash-v11-button-back-fixes';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', event => {
