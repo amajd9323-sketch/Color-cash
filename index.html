@@ -88,6 +88,301 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 .credit-footer{color:#8b96b8;line-height:1.9}
 @media(max-width:520px){.word-grid{grid-template-columns:1fr}.direction-btn{min-height:82px}.game-card{min-height:112px}}
 
+
+/* ─────────────────────────────────────────────────────────────
+   COLOR CLASH • COMPLETE VISUAL REDESIGN
+   Presentation layer only — gameplay IDs and behavior preserved.
+───────────────────────────────────────────────────────────── */
+:root{
+ --bg:#090d19;--panel:#121a2c;--panel-2:#172238;--line:#283650;
+ --cyan:#74e9e5;--pink:#ff7899;--purple:#9a8cff;--green:#a5e6b6;
+ --muted:#98a6bd;--text:#f4f7fb;--surface:#10192a;--surface-2:#1a263b;
+ --shadow:0 22px 60px #03071166;--radius:24px;
+}
+body[data-theme="sunset"]{--bg:#160e1b;--panel:#241a2e;--panel-2:#32243c;--line:#57405b;--cyan:#ffc278;--pink:#ff829d;--purple:#d19bff}
+body[data-theme="ocean"]{--bg:#071522;--panel:#102538;--panel-2:#17344a;--line:#28516b;--cyan:#70e4f1;--pink:#72baff;--purple:#8d9cff}
+body[data-theme="forest"]{--bg:#0b1712;--panel:#14271e;--panel-2:#1b3428;--line:#345644;--cyan:#9ce5b5;--pink:#c6e18b;--purple:#81c9a2}
+body[data-theme="candy"]{--bg:#170e20;--panel:#25172f;--panel-2:#34203f;--line:#573968;--cyan:#80e8ef;--pink:#ff91ca;--purple:#c09aff}
+*{box-sizing:border-box}
+html{min-height:100%;background:var(--bg);scroll-behavior:smooth}
+body{
+ min-height:100vh;margin:0;color:var(--text);
+ background:
+  radial-gradient(ellipse at 78% -8%,color-mix(in srgb,var(--purple) 16%,transparent),transparent 39%),
+  radial-gradient(ellipse at 3% 36%,color-mix(in srgb,var(--cyan) 9%,transparent),transparent 30%),
+  var(--bg);
+ font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+ letter-spacing:.01em;line-height:1.45;
+ padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);
+}
+button,input,select{font:inherit}
+button{color:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+button:disabled{opacity:.43;cursor:not-allowed;transform:none!important}
+.wrap{width:min(100% - 34px,710px);max-width:710px;margin:0 auto;padding:18px 0 34px}
+.top{min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}
+.brand{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:950;letter-spacing:1.7px;white-space:nowrap}
+.brand b{color:var(--cyan)}
+.brand-mark{width:38px!important;height:38px!important;min-width:38px;border:1px solid #ffffff24;border-radius:12px;box-shadow:0 5px 18px #0004;object-fit:cover}
+.top>.row{display:flex;align-items:center;gap:7px}
+.pill{min-height:36px;padding:7px 10px;border:1px solid var(--line);border-radius:12px;background:#111b2d;color:#d1d9e7;font-size:11px;font-weight:750;letter-spacing:.02em}
+#connection{max-width:148px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#settingsOpen{font-size:0;width:38px;min-width:38px;position:relative}
+#settingsOpen:after{content:"⚙";font-size:17px}
+#languageSelect{min-width:47px}
+.screen{width:100%;max-width:710px;margin:0 auto;animation:screenIn .35s ease both}
+@keyframes screenIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+.panel{background:linear-gradient(155deg,color-mix(in srgb,var(--panel) 97%,white 3%),var(--panel));border:1px solid var(--line);border-radius:var(--radius);padding:clamp(17px,4vw,26px);box-shadow:var(--shadow)}
+.primary,.secondary,.danger{
+ min-height:46px;padding:12px 17px;border-radius:14px;font-weight:850;font-size:13px;
+ transition:transform .18s ease,filter .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+.primary{background:linear-gradient(110deg,var(--cyan),#a8d9ff);color:#07141d;box-shadow:0 8px 24px color-mix(in srgb,var(--cyan) 18%,transparent)}
+.secondary{background:var(--surface-2);border:1px solid #34445f;color:#e0e8f3}
+.danger{background:#3a2030;border:1px solid #754258;color:#ffc3d0}
+.primary:not(:disabled):active,.secondary:not(:disabled):active,.danger:not(:disabled):active{transform:scale(.975)}
+@media(hover:hover){.primary:not(:disabled):hover,.secondary:not(:disabled):hover{filter:brightness(1.12);transform:translateY(-1px)}}
+.hidden{display:none!important}
+.muted{color:var(--muted)!important}
+.center{text-align:center}
+label{display:block;margin:10px 0 6px;color:#cbd6e5;font-size:12px;font-weight:750}
+.field,.word-field{
+ width:100%;min-height:47px;padding:12px 14px;margin:5px 0 12px;
+ background:#0b1423;border:1px solid #2b3b54;border-radius:13px;color:var(--text);
+ box-shadow:inset 0 1px 0 #ffffff05;
+}
+.field:focus,.word-field:focus{border-color:var(--cyan);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--cyan) 13%,transparent)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.actions{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:15px}
+.statusline{min-height:24px;margin:9px 0;color:#b8c5d7;font-size:12px}
+.note{padding:14px;border:1px solid var(--line);border-radius:15px;background:#0e1828;color:var(--muted);font-size:12px;line-height:1.7}
+hr{border:0;border-top:1px solid var(--line);margin:19px 0}
+.foot{margin:24px auto 0;color:#63728a;font-size:10px;text-align:center;letter-spacing:1.2px}
+.multi-title,.game-card,.creator-credit,#multiLobby,#multiGame{display:none!important}
+
+/* Home */
+.home-hero{
+ position:relative;isolation:isolate;overflow:hidden;min-height:265px;
+ display:flex;align-items:center;padding:30px 28px;margin:5px 0 24px;
+ border:1px solid #31435b;border-radius:28px;
+ background:linear-gradient(112deg,#17243a 0%,#15243a 50%,#232340 100%);
+ box-shadow:0 24px 65px #02071375;
+}
+.home-hero:before{content:"";position:absolute;z-index:-1;width:310px;height:310px;right:-95px;top:-120px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--purple) 35%,transparent),transparent 70%)}
+.home-hero:after{content:"";position:absolute;z-index:-1;width:240px;height:240px;left:-125px;bottom:-160px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--cyan) 22%,transparent),transparent 70%)}
+.hero-copy{position:relative;z-index:2;max-width:390px}
+.hero-kicker,.section-kicker{display:inline-flex;align-items:center;gap:8px;color:var(--cyan);font-size:9px;font-weight:900;letter-spacing:2.1px}
+.hero-kicker i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green)}
+.hero-kicker b{color:#8290a8}
+.home-hero h1{margin:18px 0 10px;font-size:clamp(32px,7vw,49px);line-height:1.07;letter-spacing:-1.8px;font-weight:950;color:#f6f8ff}
+.home-hero h1 em{font-style:normal;color:var(--cyan)}
+.home-hero p{margin:0;color:#aebbd0;font-size:13px;max-width:265px;line-height:1.65}
+.hero-tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:20px}
+.hero-tags span{padding:6px 9px;border-radius:8px;background:#ffffff0c;border:1px solid #ffffff16;color:#d7e1ef;font-size:8px;font-weight:850;letter-spacing:1px}
+.hero-art{position:absolute;right:23px;top:50%;width:205px;height:205px;transform:translateY(-50%);pointer-events:none}
+.art-ring{position:absolute;border:1px solid #ffffff24;border-radius:50%;inset:8px}
+.ring-two{inset:32px;border-style:dashed;opacity:.7;animation:spinSlow 32s linear infinite}
+@keyframes spinSlow{to{transform:rotate(360deg)}}
+.art-core{position:absolute;inset:66px;border-radius:29px;transform:rotate(45deg);background:linear-gradient(140deg,#7df0df,#78b6ff 52%,#b39bff);box-shadow:0 0 48px #7bbcfb55, inset 0 2px 12px #ffffff75}
+.art-swatch{position:absolute;width:38px;height:38px;border:4px solid #1a2940;border-radius:12px;box-shadow:0 7px 20px #0005}
+.swatch-a{top:13px;left:80px;background:#ff7899}.swatch-b{right:7px;top:91px;background:#f8c96c}.swatch-c{bottom:10px;left:70px;background:#83e5b3}.swatch-d{left:3px;top:83px;background:#a58eff}
+.section-heading{display:flex;justify-content:space-between;align-items:end;margin:0 3px 12px}
+.section-heading h2{font-size:20px;letter-spacing:-.5px;margin:4px 0 0}
+.section-index{color:#708098;font-size:9px;letter-spacing:1.4px;font-weight:850;padding-bottom:4px}
+.home-actions{display:grid;grid-template-columns:1fr;gap:10px}
+.mode{
+ width:100%;min-width:0;min-height:90px;text-align:left;display:flex;align-items:center;gap:14px;
+ padding:15px 16px;border-radius:19px;border:1px solid #2d3d55;background:linear-gradient(115deg,#17243a,#131e31);
+ transition:transform .18s,border-color .18s,box-shadow .18s;position:relative;overflow:hidden;
+}
+.mode:active{transform:scale(.99)}
+.mode-feature{min-height:112px;background:linear-gradient(105deg,#233b4e,#182c42 63%,#20334e);border-color:#3c6270}
+.mode-feature:before{content:"";position:absolute;width:180px;height:180px;right:-75px;top:-105px;border-radius:50%;background:radial-gradient(circle,#74e9e533,transparent 70%)}
+.online-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.online-actions .mode{min-height:128px;align-items:flex-start;flex-direction:column;gap:9px;padding:14px}
+.action-icon{width:43px;height:43px;min-width:43px;display:grid;place-items:center;border-radius:14px;font-size:24px;font-weight:700}
+.solo-icon{background:#73e8df1a;color:var(--cyan);border:1px solid #73e8df35}
+.online-icon{background:#a18aff1c;color:#b5a5ff;border:1px solid #a18aff3a}
+.join-icon{background:#ff8fa01a;color:#ff9fb0;border:1px solid #ff8fa036}
+.action-copy{min-width:0;flex:1}
+.action-kicker{display:block;font-size:8px;color:var(--cyan);font-weight:900;letter-spacing:1.5px;margin-bottom:4px}
+.mode h3{margin:0 0 3px;font-size:16px;line-height:1.25;color:#f4f7fc;font-weight:850}
+.mode p{margin:0;color:#9eacc0;font-size:11px;line-height:1.55;font-weight:500}
+.mode-online .action-kicker{color:#b9aaff}
+.mode-join .action-kicker{color:#ff9fb0}
+.action-arrow{font-size:18px;color:#90a0b8;margin-left:auto;align-self:center}
+.online-actions .action-arrow{position:absolute;right:14px;top:12px}
+.mode-how{min-height:58px;padding:10px 15px;background:transparent;border-color:#26354b}
+.mode-how h3{font-size:13px}.mode-how p{font-size:10px}
+.how-icon{width:30px;height:30px;min-width:30px;border:1px solid #687b95;border-radius:50%;display:grid;place-items:center;font-weight:900;color:#c0d0e1}
+.home-control-panel{margin-top:17px;padding:15px 16px;border:1px solid #283950;background:#111b2b;border-radius:19px}
+.difficulty-row{display:grid;grid-template-columns:38px 1fr minmax(145px,190px);align-items:center;gap:10px;margin:0;padding:0;border:0;background:transparent}
+.setting-symbol{width:34px;height:34px;border-radius:11px;background:#ffffff0b;color:var(--cyan);display:grid;place-items:center;font-size:19px}
+.difficulty-copy label{margin:0;color:#e2eaf4;font-size:12px}.difficulty-copy small{display:block;color:#8797ae;font-size:9px;margin-top:2px}
+.difficulty-row .field{min-height:39px;margin:0;padding:8px 10px;font-size:11px;border-radius:10px}
+.home-stats-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;border-top:1px solid #28374d;margin-top:13px;padding-top:12px}
+.home-stat{display:flex;align-items:center;gap:9px;min-width:0}
+.stat-symbol{width:27px;height:27px;min-width:27px;display:grid;place-items:center;border-radius:9px;background:#ffffff0b;color:var(--cyan)}
+.home-stat small{display:block;color:#8192aa;font-size:8px;font-weight:850;letter-spacing:1px}
+.home-stat strong{display:block;color:#dce5f0;font-size:10px;margin-top:2px;line-height:1.4}
+.profile-details{margin-top:12px;border:1px solid #293950;border-radius:18px;background:#111b2b;overflow:hidden}
+.profile-details>summary{display:flex;align-items:center;gap:11px;padding:14px 16px;cursor:pointer;list-style:none}
+.profile-details>summary::-webkit-details-marker{display:none}
+.profile-summary-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:12px;background:#9a8cff19;color:#c0b6ff;font-size:22px}
+.profile-details>summary strong{display:block;font-size:12px;color:#e4ecf6}
+.profile-details>summary small{display:block;font-size:10px;color:#8c9bb0;margin-top:2px}
+.summary-chevron{margin-left:auto;color:#8a9ab0;font-size:20px;transition:transform .2s}
+.profile-details[open] .summary-chevron{transform:rotate(180deg)}
+.profile-details .profile-panel{margin:0;padding:4px 16px 17px;border:0;border-top:1px solid #293950;border-radius:0;background:transparent;box-shadow:none}
+.home-footer{display:flex;justify-content:space-between;gap:10px;margin:18px 4px 4px;color:#5f718a;font-size:8px;letter-spacing:1.4px;font-weight:850}
+
+/* Lobby, room and settings */
+#lobby>.panel,#settings>.panel,#howScreen>.panel{padding:clamp(19px,5vw,29px)}
+#lobby h2,#settings h2,#howScreen h2{font-size:25px;letter-spacing:-.7px;margin:22px 0 17px}
+#lobby .row:first-child,#settings .row:first-child{padding-bottom:13px;border-bottom:1px solid #2a394f}
+#lobby .code,#profilePanel .code{font-size:clamp(34px,10vw,48px);letter-spacing:9px;font-weight:950;color:var(--cyan)}
+#roomInfo .note{margin-top:16px!important}
+#roomInfo .note .row{padding:8px 0;border:0;border-bottom:1px solid #27374b}
+#startOnline,#createRoom,#joinRoom,#saveSettings{min-width:150px}
+#roomStatus{color:#aebdd0;font-size:12px}
+#howScreen p{padding:12px 14px;background:#0e1828;border:1px solid #26364c;border-radius:13px;color:#becada;font-size:13px;line-height:1.65}
+#settingsNote{margin-top:14px}
+#profilePanel .row{align-items:center}
+#profilePanel .row label{min-width:65px}
+#profilePanel .row .field{flex:1}
+
+/* Match screen */
+.game-panel{padding:clamp(15px,4vw,25px)}
+.game-toolbar{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px}
+.exit-button{min-height:38px;padding:8px 12px;font-size:11px}
+.round-indicator{text-align:center;min-width:0}
+.round-indicator small,.timer-wrap small{display:block;color:#7f91a9;font-size:8px;font-weight:900;letter-spacing:1.3px}
+.round-indicator strong{display:block;font-size:12px;color:#e2eaf5;margin-top:2px}
+.timer-wrap{min-width:65px;text-align:right}
+.timer{display:block;color:var(--cyan);font-size:24px;font-weight:950;font-variant-numeric:tabular-nums;line-height:1.15}
+.game-progress{height:6px;margin:13px 0 16px;background:#27364d}
+.game-progress i{border-radius:10px;background:linear-gradient(90deg,var(--cyan),var(--purple));box-shadow:0 0 12px #75e9e577}
+.game-score-row{gap:10px}
+.scorebox{background:#17243a;border:1px solid #30425b;border-radius:15px;padding:10px 13px;text-align:left;color:#9cadc2;font-size:10px;font-weight:750;min-width:0}
+.scorebox strong{display:block;margin-top:3px;font-size:23px;line-height:1.1;color:#f5f8fc;font-weight:950;font-variant-numeric:tabular-nums}
+#youLabel{border-left:3px solid var(--cyan)}
+#opLabel{border-left:3px solid var(--pink)}
+#seriesScore{border:1px solid #2e4059;background:#101b2e;border-radius:11px;padding:8px;font-size:11px}
+.powerup-wrap{margin:10px 0 0}
+.powerup-bar{justify-content:center;gap:7px;margin:0;flex-wrap:wrap}
+.powerup-bar button{min-width:0;min-height:37px;padding:8px 11px;border-radius:11px;font-size:10px;background:#19263b}
+#powerupInfo{margin:5px 0 0;min-height:15px;font-size:9px!important;color:#9cabc0!important;line-height:1.4}
+.challenge-heading{margin:21px 0 10px;text-align:center}
+.challenge-heading .section-kicker{font-size:8px}
+.challenge-heading h3{margin:6px 0 4px;font-size:23px;letter-spacing:-.6px}
+.challenge-heading p{margin:0 auto;max-width:370px;font-size:11px;line-height:1.6}
+.challenge-board{min-height:110px}
+.tiles{gap:8px;max-width:420px!important;margin:17px auto}
+.tile{border-radius:12px;border:2px solid #ffffff1e;box-shadow:0 5px 12px #0002;transition:transform .12s,opacity .2s}
+.palette{gap:9px;margin:17px auto;max-width:470px}
+.choice{min-height:72px;border-radius:15px;border:2px solid #ffffff24;box-shadow:0 5px 14px #0002}
+.target{min-height:105px;max-width:420px;margin:12px auto;border-radius:18px;color:#fff;text-shadow:0 2px 8px #0005;box-shadow:inset 0 0 0 1px #ffffff20}
+.memory-on{filter:brightness(1.65);box-shadow:0 0 24px #ffffff80!important}
+.hint-faded{opacity:.19!important;filter:grayscale(1)}
+.tile.selected{outline:3px solid #fff;outline-offset:2px}
+.tile.revealed,.choice.revealed{outline:3px solid #fff;outline-offset:3px;box-shadow:0 0 22px #fff9}
+.game-feedback{margin-top:8px}
+.game-feedback .statusline{font-size:12px}
+.game-feedback .primary{min-width:150px}
+.game-reactions{margin-top:16px;padding-top:12px;border-top:1px solid #283950}
+.reaction-caption{text-align:center;font-size:8px;letter-spacing:1.4px;color:#71839d;font-weight:900;margin:0}
+.reaction-bar{gap:7px;margin:7px 0 0}
+.reaction-bar button{width:39px;min-width:39px;height:36px;min-height:36px;padding:5px;border-radius:11px;font-size:16px}
+#reactionNotice{min-height:17px;margin:3px 0 0;font-size:10px}
+
+/* Results and records */
+.result-panel{padding:clamp(22px,6vw,34px)}
+.result-trophy{width:64px;height:64px;display:grid;place-items:center;margin:0 auto 14px;border-radius:22px;background:linear-gradient(145deg,#74e9e522,#9a8cff22);border:1px solid #68889d55;color:var(--cyan);font-size:32px;box-shadow:0 12px 30px #0003}
+.result-panel h2{font-size:clamp(23px,6vw,31px);margin:8px 0 13px;letter-spacing:-.8px}
+.result-score-wrap{display:inline-block;min-width:180px;margin:8px auto 18px;padding:15px 30px;border:1px solid #31465f;border-radius:20px;background:linear-gradient(145deg,#192941,#172239)}
+.result-score-wrap h1{font-size:clamp(40px,10vw,58px);font-weight:950;letter-spacing:-2px;margin:0;color:var(--cyan);line-height:1.1}
+.result-score-wrap p{margin:5px 0 0;color:#9aabc0;font-size:10px}
+#resultRows{color:#c5d0df;font-size:13px;line-height:1.8}
+#resultRows p{margin:7px 0}
+.result-actions{margin-top:22px}
+.result-actions .primary{min-width:150px}
+#resultHome{min-width:110px}
+
+/* Profile, records and friends */
+.profile-panel{margin-top:0;padding:12px 0 0;border:0;border-radius:0;background:transparent;box-shadow:none}
+.profile-panel h3{margin:0 0 12px;font-size:17px}
+.profile-panel .row{margin:10px 0}
+.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}
+.stat-card{background:#101b2d;border:1px solid #2a3c53;border-radius:13px;padding:10px 6px;text-align:center}
+.stat-card span{display:block;color:#91a2b8;font-size:9px}.stat-card strong{display:block;color:var(--cyan);font-size:20px;margin-top:3px}
+.achievement-list{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 14px}
+.achievement-badge{border:1px solid #71648f;background:#28243e;border-radius:999px;padding:6px 9px;font-size:10px;color:#e9e2ff}
+.friends-list{display:grid;gap:8px;margin-top:10px}
+.friend-item,.match-item{padding:11px;border:1px solid #293a51;border-radius:13px;display:flex;justify-content:space-between;gap:8px;align-items:center;background:#101a2b;font-size:11px}
+.match-item small{display:block;color:#8495ac;margin-top:3px}.match-result{white-space:nowrap;font-weight:900}
+.profile-panel .field{max-width:none}
+
+/* Miscellaneous */
+.code{padding:10px 0;text-align:center}
+.multi-status{background:#101b2c;border:1px solid #293a51;border-radius:14px;padding:12px;color:#d4dfec;font-size:12px}
+@media(max-width:560px){
+ .wrap{width:min(100% - 24px,710px);padding-top:12px}
+ .top{gap:8px;margin-bottom:15px}
+ .brand{font-size:14px;gap:7px;letter-spacing:1.2px}
+ .brand-mark{width:34px!important;height:34px!important;min-width:34px}
+ .top>.row{gap:5px}
+ #connection{max-width:92px;font-size:9px;padding:7px 8px}
+ #languageSelect{font-size:10px;padding:7px 6px;min-width:42px}
+ #settingsOpen{width:34px;min-width:34px;min-height:34px}
+ .home-hero{min-height:225px;padding:23px 19px;margin-bottom:20px;border-radius:23px}
+ .hero-copy{max-width:68%}
+ .home-hero h1{font-size:clamp(29px,8vw,39px);letter-spacing:-1.3px;margin:15px 0 8px}
+ .home-hero p{font-size:11px}
+ .hero-art{width:145px;height:145px;right:-5px}
+ .art-core{inset:49px;border-radius:22px}
+ .art-ring{inset:5px}.ring-two{inset:23px}
+ .art-swatch{width:30px;height:30px;border-width:3px;border-radius:9px}
+ .swatch-a{top:8px;left:55px}.swatch-b{right:0;top:63px}.swatch-c{bottom:4px;left:54px}.swatch-d{left:0;top:63px}
+ .hero-tags{gap:5px;margin-top:15px}.hero-tags span{font-size:7px;padding:5px 6px}
+ .section-heading h2{font-size:18px}
+ .mode{gap:11px;padding:12px 13px}
+ .mode-feature{min-height:100px}
+ .online-actions .mode{min-height:133px;padding:12px}
+ .action-icon{width:37px;height:37px;min-width:37px;border-radius:12px}
+ .mode h3{font-size:14px}.mode p{font-size:10px}
+ .online-actions{gap:8px}
+ .home-control-panel{padding:13px}
+ .difficulty-row{grid-template-columns:32px 1fr minmax(120px,150px);gap:7px}
+ .difficulty-row .field{font-size:10px}
+ .home-stats-row{gap:7px}
+ .home-stat{gap:6px}
+ .home-stat strong{font-size:9px}
+ .home-stat small{font-size:7px}
+ .home-footer{font-size:7px}
+ .panel{border-radius:20px;padding:16px}
+ .game-toolbar{gap:7px}
+ .round-indicator strong{font-size:10px}
+ .timer{font-size:22px}
+ .scorebox{padding:9px 10px}
+ .scorebox strong{font-size:21px}
+ .challenge-heading{margin-top:18px}
+ .challenge-heading h3{font-size:20px}
+ .tiles{gap:6px}.tile{border-radius:9px}
+ .palette{gap:7px}.choice{min-height:60px;border-radius:12px}
+ .reaction-bar button{width:36px;min-width:36px}
+ .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:360px){
+ .hero-art{right:-28px;opacity:.88}
+ .hero-copy{max-width:74%}
+ .online-actions .mode{min-height:142px}
+ .mode p{font-size:9px}
+ .home-stats-row{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -98,18 +393,61 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
  <div class="row"><select class="pill" id="languageSelect" aria-label="Language"><option value="en">EN</option><option value="tr">TR</option></select><span class="pill" id="connection">● Solo mode available</span><button class="pill" id="settingsOpen" type="button">⚙ Settings</button></div>
 </header>
 
-<section id="home">
- <div class="hero"><img class="hero-logo" src="./icon.svg" alt="Color Clash logo"><div class="eyebrow">SEE IT • FIND IT • WIN IT</div><p>Test your speed and memory. Play solo or challenge a friend!</p></div>
- <div class="panel">
-  <div class="grid">
-   <button class="mode" id="solo"><div class="emoji">🎯</div><h3>Solo Challenge</h3><p>15 rounds against the computer. Beat your best score.</p></button>
-   <button class="mode" id="create"><div class="emoji">⚔️</div><h3>Create Room</h3><p>Create a private room and share the code with a friend.</p></button>
-   <button class="mode" id="join"><div class="emoji">🚪</div><h3>Join Room</h3><p>Enter your friend’s room code and play together.</p></button>
-   <button class="mode" id="how"><div class="emoji">❔</div><h3>How to Play</h3><p>Learn the challenges and scoring rules.</p></button>
+<section id="home" class="home-screen">
+ <div class="home-hero">
+  <div class="hero-copy">
+   <span class="hero-kicker"><i></i> COLOR CLASH <b>/</b> QUICK DUEL</span>
+   <h1 id="homeHeroTitle">Find the color.<br><em>Own the round.</em></h1>
+   <p id="homeHeroText">Fast eyes. Sharp memory. One winner.</p>
+   <div class="hero-tags"><span>1 VS 1 ONLINE</span><span>3 CHALLENGE TYPES</span></div>
   </div>
-  <div class="difficulty-row"><label id="difficultyLabel" for="difficultySelect">Difficulty</label><select class="field" id="difficultySelect"><option value="relaxed">Relaxed · 35 sec</option><option value="normal">Normal · 30 sec</option><option value="hard">Hard · 25 sec</option><option value="extreme">Extreme · 20 sec</option></select></div>
-  <div class="row" style="margin-top:18px"><span class="muted" id="best">Best Score: 0</span><span class="muted" id="roundTypesNote">15 rounds • 3 challenge types</span></div>
-  <p id="seriesHint" class="muted center" style="font-size:13px;margin:12px 0 0">Online series: 10 rounds per set. First player to win 3 sets wins.</p>
+  <div class="hero-art" aria-hidden="true">
+   <div class="art-ring ring-one"></div><div class="art-ring ring-two"></div>
+   <div class="art-swatch swatch-a"></div><div class="art-swatch swatch-b"></div>
+   <div class="art-swatch swatch-c"></div><div class="art-swatch swatch-d"></div>
+   <div class="art-core"></div>
+  </div>
+ </div>
+
+ <div class="section-heading">
+  <div><span class="section-kicker">YOUR NEXT MOVE</span><h2 id="chooseModeTitle">Choose your mode</h2></div>
+  <span class="section-index">01 — 04</span>
+ </div>
+
+ <div class="home-actions">
+  <button class="mode mode-feature" id="solo">
+   <span class="action-icon solo-icon">◉</span>
+   <span class="action-copy"><span class="action-kicker" id="soloActionKicker">PLAY SOLO</span><h3>Solo Challenge</h3><p>15 rounds against the computer. Beat your best score.</p></span>
+   <span class="action-arrow">↗</span>
+  </button>
+  <div class="online-actions">
+   <button class="mode mode-online" id="create">
+    <span class="action-icon online-icon">＋</span>
+    <span class="action-copy"><span class="action-kicker" id="createActionKicker">HOST A MATCH</span><h3>Create Room</h3><p>Make a private room and invite a friend.</p></span>
+    <span class="action-arrow">↗</span>
+   </button>
+   <button class="mode mode-join" id="join">
+    <span class="action-icon join-icon">⌁</span>
+    <span class="action-copy"><span class="action-kicker" id="joinActionKicker">JOIN A MATCH</span><h3>Join Room</h3><p>Enter a room code and start the duel.</p></span>
+    <span class="action-arrow">↗</span>
+   </button>
+  </div>
+  <button class="mode mode-how" id="how"><span class="how-icon">?</span><span class="action-copy"><h3>How to Play</h3><p>Rules, rounds and fair-play scoring.</p></span><span class="action-arrow">→</span></button>
+ </div>
+
+ <div class="home-control-panel">
+  <div class="difficulty-row">
+   <div class="setting-symbol">⌁</div><div class="difficulty-copy"><label id="difficultyLabel" for="difficultySelect">Difficulty</label><small id="difficultyHint">Choose your pace</small></div>
+   <select class="field" id="difficultySelect"><option value="relaxed">Relaxed · 35 sec</option><option value="normal">Normal · 30 sec</option><option value="hard">Hard · 25 sec</option><option value="extreme">Extreme · 20 sec</option></select>
+  </div>
+  <div class="home-stats-row">
+   <div class="home-stat"><span class="stat-symbol">✦</span><div><small id="bestLabel">PERSONAL BEST</small><strong id="best">Best Score: 0</strong></div></div>
+   <div class="home-stat"><span class="stat-symbol">◈</span><div><small id="roundTypesNote">15 rounds • 3 challenge types</small><strong id="seriesHint">First to 3 sets wins the series.</strong></div></div>
+  </div>
+ </div>
+
+ <details class="profile-details" id="profileDetails">
+  <summary><span class="profile-summary-icon">◎</span><span><strong id="profileSummaryTitle">Player profile</strong><small id="profileSummaryDesc">Appearance, sound, friends & match record</small></span><span class="summary-chevron">⌄</span></summary>
   <div class="profile-panel" id="profilePanel">
    <h3 id="profileTitle">Player Profile</h3>
    <label id="profileNameLabel" for="profileName">Display Name</label><input class="field" id="profileName" maxlength="18" placeholder="Your display name">
@@ -131,18 +469,8 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
     <p id="historyTitle" class="muted">Recent matches</p><div id="matchHistory" class="friends-list"><span class="muted">Connect to load match history.</span></div>
    </div>
   </div>
-
-  <hr>
-  <h2 class="center multi-title">🎮 Online Multiplayer Games</h2>
-  <p class="muted center">Choose a game, create a room, and share the code.</p>
-  <div class="grid">
-   <button class="mode game-card" id="openXO"><div class="emoji">⭕</div><h3>XO — Tic-Tac-Toe</h3><p>A live 1v1 match. Take turns and win.</p></button>
-   <button class="mode game-card" id="openPlant"><div class="emoji">🌱</div><h3>Name, Plant, Animal, Object</h3><p>Three rounds with random letters and points for answers.</p></button>
-   <button class="mode game-card" id="openPenalty"><div class="emoji">⚽</div><h3>Penalty Shootout</h3><p>Take shots or make saves. Five kicks per player.</p></button>
-  </div>
-  <div class="creator-credit"><strong>Created by HEMA</strong><br><span class="gift">Friendly competition with Mervie • 1 vs 1</span></div>
-
- </div>
+ </details>
+ <div class="home-footer"><span>COLOR CLASH</span><span>MADE FOR THE NEXT REMATCH</span></div>
 </section>
 
 <section id="lobby" class="screen hidden">
@@ -171,26 +499,29 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 </section>
 
 <section id="game" class="screen hidden">
- <div class="panel">
-  <div class="row"><button class="secondary" id="quitGame">Exit</button><span id="roundLabel">Round 1 / 10</span><span class="timer" id="timer">20.0</span></div>
-  <div class="bar"><i id="progress"></i></div>
-  <div class="row" style="margin-top:14px"><div class="scorebox" id="youLabel">Your Score<strong id="youScore">0</strong></div><div class="scorebox" id="opLabel">Opponent<strong id="opScore">0</strong></div></div>
+ <div class="panel game-panel">
+  <div class="game-toolbar">
+   <button class="secondary exit-button" id="quitGame">Exit</button>
+   <div class="round-indicator"><small>ROUND</small><strong id="roundLabel">Round 1 / 10</strong></div>
+   <div class="timer-wrap"><small>TIME LEFT</small><span class="timer" id="timer">20.0</span></div>
+  </div>
+  <div class="bar game-progress"><i id="progress"></i></div>
+  <div class="row game-score-row"><div class="scorebox" id="youLabel">Your Score<strong id="youScore">0</strong></div><div class="scorebox" id="opLabel">Opponent<strong id="opScore">0</strong></div></div>
   <p id="seriesScore" class="center muted hidden"></p>
-  <div class="actions powerup-bar hidden" id="powerupBar">
+  <div class="powerup-wrap"><div class="actions powerup-bar hidden" id="powerupBar">
    <button class="secondary" id="powerExtra">⏱ +5s</button><button class="secondary" id="powerReveal">🔎 Hint</button><button class="secondary" id="powerFreeze">❄️ Freeze</button>
   </div>
-  <p id="powerupInfo" class="center muted hidden" style="font-size:12px">2 power-ups per set • one per round • using one costs 25% of this round’s points</p>
-  <div class="actions reaction-bar" id="reactionBar"><button class="secondary" data-reaction="🔥">🔥</button><button class="secondary" data-reaction="😂">😂</button><button class="secondary" data-reaction="👏">👏</button><button class="secondary" data-reaction="😈">😈</button><button class="secondary" data-reaction="😎">😎</button></div>
-  <p id="reactionNotice" class="center statusline"></p>
-  <h3 id="modeLabel" class="center"></h3><p id="hint" class="center muted"></p>
-  <div id="gameContent"></div>
-  <div class="center"><p id="feedback" class="statusline"></p><button class="primary hidden" id="nextRound">Next Round →</button></div>
+  <p id="powerupInfo" class="center muted hidden" style="font-size:12px">2 power-ups per set • one per round • using one costs 25% of this round’s points</p></div>
+  <div class="challenge-heading"><span class="section-kicker">FOCUS MODE</span><h3 id="modeLabel" class="center"></h3><p id="hint" class="center muted"></p></div>
+  <div id="gameContent" class="challenge-board"></div>
+  <div class="game-feedback center"><p id="feedback" class="statusline"></p><button class="primary hidden" id="nextRound">Next Round →</button></div>
+  <div class="game-reactions"><p class="reaction-caption">QUICK REACTIONS</p><div class="actions reaction-bar" id="reactionBar"><button class="secondary" data-reaction="🔥">🔥</button><button class="secondary" data-reaction="😂">😂</button><button class="secondary" data-reaction="👏">👏</button><button class="secondary" data-reaction="😈">😈</button><button class="secondary" data-reaction="😎">😎</button></div><p id="reactionNotice" class="center statusline"></p></div>
  </div>
 </section>
 
 <section id="result" class="screen hidden">
- <div class="panel center"><div style="font-size:48px">🏆</div><h2 id="resultTitle">Challenge Complete!</h2><div class="hero"><h1 id="finalScore">0</h1><p id="yourPointsLabel">Your Points</p></div>
-  <div id="resultRows"></div><div class="actions"><button class="primary" id="playAgain">Play Again</button><button class="secondary" id="resultHome">Home</button></div>
+ <div class="panel result-panel center"><div class="result-trophy">✦</div><span class="section-kicker">MATCH COMPLETE</span><h2 id="resultTitle">Challenge Complete!</h2><div class="result-score-wrap"><h1 id="finalScore">0</h1><p id="yourPointsLabel">Your Points</p></div>
+  <div id="resultRows"></div><div class="actions result-actions"><button class="primary" id="playAgain">Play Again</button><button class="secondary" id="resultHome">Home</button></div>
  </div>
 </section>
 
@@ -282,6 +613,7 @@ const DEFAULT_SUPABASE_CONFIG={url:'https://aburwotarmzycgbfqkle.supabase.co',ke
 const LANG={
 en:{
  settings:'Settings',soloAvailable:'Solo mode available',connecting:'Connecting to game server',connected:'Connected to game server',disconnected:'Disconnected',
+ heroTitle:'Find the color. Own the round.',heroDesc:'Fast eyes. Sharp memory. One winner.',chooseMode:'Choose your mode',soloKicker:'PLAY SOLO',createKicker:'HOST A MATCH',joinKicker:'JOIN A MATCH',profileSummary:'Player profile',profileSummaryDesc:'Appearance, sound, friends & match record',difficultyHint:'Choose your pace',bestLabel:'PERSONAL BEST',
  soloTitle:'Solo Challenge',soloDesc:'15 rounds against the computer. Beat your best score.',createTitle:'Create Room',createDesc:'Create a private room and share the code with a friend.',joinTitle:'Join Room',joinDesc:'Enter your friend’s room code and play together.',howTitle:'How to Play',howDesc:'Learn the challenges and scoring rules.',
  bestScore:'Best Score',roundTypes:'15 rounds • 3 challenge types',setLabel:'Set {set}',difficulty:'Difficulty',relaxed:'Relaxed · 35 sec',normal:'Normal · 30 sec',hard:'Hard · 25 sec',extreme:'Extreme · 20 sec',seriesHint:'Online series: 10 rounds per set. First player to win 3 sets wins.',
  settingsBadge:'Multiplayer Connection',settingsTitle:'Connection Settings',settingsDescription:'Enter your Supabase Project URL and anon / publishable key only.',
@@ -315,6 +647,7 @@ en:{
 },
 tr:{
  settings:'Ayarlar',soloAvailable:'Tek oyunculu mod kullanılabilir',connecting:'Oyun sunucusuna bağlanıyor',connected:'Oyun sunucusuna bağlandı',disconnected:'Bağlantı kesildi',
+ heroTitle:'Rengi bul. Turu kazan.',heroDesc:'Hızlı gözler. Güçlü hafıza. Tek kazanan.',chooseMode:'Oyun modunu seç',soloKicker:'TEK OYUNCU',createKicker:'ODA OLUŞTUR',joinKicker:'ODAYA KATIL',profileSummary:'Oyuncu profili',profileSummaryDesc:'Görünüm, ses, arkadaşlar ve maç geçmişi',difficultyHint:'Hızını seç',bestLabel:'EN İYİ SKOR',
  soloTitle:'Tek Oyunculu Mücadele',soloDesc:'Bilgisayara karşı 15 tur oyna. En iyi skorunu geç.',createTitle:'Oda Oluştur',createDesc:'Özel bir oda oluştur ve kodu arkadaşınla paylaş.',joinTitle:'Odaya Katıl',joinDesc:'Arkadaşının oda kodunu gir ve birlikte oyna.',howTitle:'Nasıl Oynanır?',howDesc:'Görevleri ve puanlama kurallarını öğren.',
  bestScore:'En İyi Skor',roundTypes:'15 tur • 3 görev türü',setLabel:'{set}. Set',difficulty:'Zorluk',relaxed:'Rahat · 35 sn',normal:'Normal · 30 sn',hard:'Zor · 25 sn',extreme:'Uzman · 20 sn',seriesHint:'Çevrimiçi seri: Her set 10 turdur. İlk 3 seti kazanan oyuncu seriyi kazanır.',
  settingsBadge:'Çok Oyunculu Bağlantı',settingsTitle:'Bağlantı Ayarları',settingsDescription:'Yalnızca Supabase proje URL’sini ve anon / publishable anahtarını gir.',
@@ -357,6 +690,10 @@ function applyLanguage(){
  const selectors=[['#solo h3','soloTitle'],['#solo p','soloDesc'],['#create h3','createTitle'],['#create p','createDesc'],['#join h3','joinTitle'],['#join p','joinDesc'],['#how h3','howTitle'],['#how p','howDesc']];
  for(const [selector,key] of selectors){const el=document.querySelector(selector);if(el)el.textContent=tr(key)}
  $('languageSelect').value=language;$('settingsOpen').textContent='⚙ '+tr('settings');
+ $('homeHeroTitle').innerHTML=tr('heroTitle').replace('. ','.<br><em>').replace(/\.$/,'</em>');
+ $('homeHeroText').textContent=tr('heroDesc');$('chooseModeTitle').textContent=tr('chooseMode');
+ $('soloActionKicker').textContent=tr('soloKicker');$('createActionKicker').textContent=tr('createKicker');$('joinActionKicker').textContent=tr('joinKicker');
+ $('profileSummaryTitle').textContent=tr('profileSummary');$('profileSummaryDesc').textContent=tr('profileSummaryDesc');$('difficultyHint').textContent=tr('difficultyHint');$('bestLabel').textContent=tr('bestLabel');
  $('difficultyLabel').textContent=tr('difficulty');for(const option of $('difficultySelect').options)option.textContent=tr(option.value);
  $('roundTypesNote').textContent=tr('roundTypes');$('seriesHint').textContent=tr('seriesHint');
  $('powerupInfo').textContent=tr('powerupInfo');
