@@ -37,6 +37,8 @@ label{display:block;font-size:13px;color:#c3cbe2;margin-top:10px}.center{text-al
 .code{font-size:36px;letter-spacing:7px;color:var(--cyan);font-weight:950;text-align:center;padding:12px 0}
 .scorebox{flex:1;background:#0c1224;border:1px solid var(--line);padding:10px;border-radius:13px;text-align:center;color:var(--muted);font-size:13px}
 .scorebox strong{display:block;font-size:23px;color:#fff}.timer{font-size:22px;color:var(--cyan);font-weight:900;font-variant-numeric:tabular-nums}
+.difficulty-row{display:grid;grid-template-columns:1fr minmax(170px,240px);align-items:center;gap:12px;margin-top:16px;padding:11px 13px;border:1px solid var(--line);border-radius:14px;background:#0c1224}.difficulty-row label{margin:0;font-weight:800}.difficulty-row .field{margin:0;min-height:42px;padding:8px 10px}
+#seriesScore{border:1px solid var(--line);background:#0d1428;border-radius:12px;padding:9px;margin:10px 0 0}
 .bar{height:8px;background:#252d48;border-radius:9px;overflow:hidden;margin-top:13px}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--purple));width:0;transition:width .25s}
 .tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin:16px 0}
 .tile{aspect-ratio:1;border-radius:12px;border:2px solid #ffffff18;min-width:0}
@@ -48,7 +50,7 @@ label{display:block;font-size:13px;color:#c3cbe2;margin-top:10px}.center{text-al
 .actions{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin-top:13px}
 .foot{text-align:center;color:#687393;font-size:12px;margin-top:25px}
 hr{border:0;border-top:1px solid var(--line);margin:18px 0}
-@media(max-width:520px){.grid{grid-template-columns:1fr}.panel{padding:16px}.tiles{gap:6px}.tile{border-radius:8px}.wrap{padding:12px 12px 35px}.mode{min-height:105px}}
+@media(max-width:520px){.difficulty-row{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.panel{padding:16px}.tiles{gap:6px}.tile{border-radius:8px}.wrap{padding:12px 12px 35px}.mode{min-height:105px}}
 
 /* HEMA x Merve multi-game hub */
 .creator-credit{margin:15px auto 0;padding:12px 16px;max-width:520px;border:1px solid #3b496a;border-radius:15px;background:linear-gradient(110deg,#1b2140,#241932);color:#e9eaff;font-size:13px;line-height:1.7;text-align:center}
@@ -73,19 +75,21 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 <main class="wrap">
 <header class="top">
  <div class="brand"><img class="brand-mark" src="./icon.svg" alt="Color Clash"><span>COLOR <b>CLASH</b></span></div>
- <div class="row"><span class="pill" id="connection">● Solo mode available</span><button class="pill" id="settingsOpen" type="button">⚙ Settings</button></div>
+ <div class="row"><select class="pill" id="languageSelect" aria-label="Language"><option value="en">EN</option><option value="tr">TR</option></select><span class="pill" id="connection">● Solo mode available</span><button class="pill" id="settingsOpen" type="button">⚙ Settings</button></div>
 </header>
 
 <section id="home">
  <div class="hero"><img class="hero-logo" src="./icon.svg" alt="Color Clash logo"><div class="eyebrow">SEE IT • FIND IT • WIN IT</div><p>Test your speed and memory. Play solo or challenge a friend!</p></div>
  <div class="panel">
   <div class="grid">
-   <button class="mode" id="solo"><div class="emoji">🎯</div><h3>Solo Challenge</h3><p>10 rounds against the computer. Beat your best score.</p></button>
+   <button class="mode" id="solo"><div class="emoji">🎯</div><h3>Solo Challenge</h3><p>15 rounds against the computer. Beat your best score.</p></button>
    <button class="mode" id="create"><div class="emoji">⚔️</div><h3>Create Room</h3><p>Create a private room and share the code with a friend.</p></button>
    <button class="mode" id="join"><div class="emoji">🚪</div><h3>Join Room</h3><p>Enter your friend’s room code and play together.</p></button>
    <button class="mode" id="how"><div class="emoji">❔</div><h3>How to Play</h3><p>Learn the challenges and scoring rules.</p></button>
   </div>
-  <div class="row" style="margin-top:18px"><span class="muted" id="best">Best Score: 0</span><span class="muted">10 rounds • 3 challenges</span></div>
+  <div class="difficulty-row"><label id="difficultyLabel" for="difficultySelect">Difficulty</label><select class="field" id="difficultySelect"><option value="relaxed">Relaxed · 35 sec</option><option value="normal">Normal · 30 sec</option><option value="hard">Hard · 25 sec</option><option value="extreme">Extreme · 20 sec</option></select></div>
+  <div class="row" style="margin-top:18px"><span class="muted" id="best">Best Score: 0</span><span class="muted" id="roundTypesNote">15 rounds • 3 challenge types</span></div>
+  <p id="seriesHint" class="muted center" style="font-size:13px;margin:12px 0 0">Online series: 10 rounds per set. First player to win 3 sets wins.</p>
 
   <hr>
   <h2 class="center multi-title">🎮 Online Multiplayer Games</h2>
@@ -104,10 +108,10 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
  <div class="panel">
   <div class="row"><button class="secondary" id="lobbyBack">← Home</button><span class="pill">Online Room</span></div>
   <h2 id="lobbyTitle">Create Room</h2>
-  <label for="playerName">Player Name</label><input class="field" id="playerName" maxlength="18" placeholder="Enter your name">
+  <label id="playerNameLabel" for="playerName">Player Name</label><input class="field" id="playerName" maxlength="18" placeholder="Enter your name">
   <div id="createControls"><button class="primary" id="createRoom">Create Room</button></div>
   <div id="joinControls" class="hidden">
-   <label for="roomInput">Room Code</label><input class="field" id="roomInput" maxlength="6" placeholder="ABC123" autocapitalize="characters">
+   <label id="roomInputLabel" for="roomInput">Room Code</label><input class="field" id="roomInput" maxlength="6" placeholder="ABC123" autocapitalize="characters">
    <button class="primary" id="joinRoom">Join Room</button>
   </div>
   <div id="roomInfo" class="hidden">
@@ -130,6 +134,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
   <div class="row"><button class="secondary" id="quitGame">Exit</button><span id="roundLabel">Round 1 / 10</span><span class="timer" id="timer">20.0</span></div>
   <div class="bar"><i id="progress"></i></div>
   <div class="row" style="margin-top:14px"><div class="scorebox" id="youLabel">Your Score<strong id="youScore">0</strong></div><div class="scorebox" id="opLabel">Opponent<strong id="opScore">0</strong></div></div>
+  <p id="seriesScore" class="center muted hidden"></p>
   <h3 id="modeLabel" class="center"></h3><p id="hint" class="center muted"></p>
   <div id="gameContent"></div>
   <div class="center"><p id="feedback" class="statusline"></p><button class="primary hidden" id="nextRound">Next Round →</button></div>
@@ -143,19 +148,19 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 </section>
 
 <section id="howScreen" class="screen hidden">
- <div class="panel"><button class="secondary" id="howBack">← Back</button><h2>How to Play</h2>
-  <p>🎯 <b>Find the Color:</b> Find the odd tile among 25 squares.</p>
-  <p>🎨 <b>Color Match:</b> Choose the exact matching color.</p>
-  <p>🧠 <b>Memory:</b> Watch the color sequence, then repeat it in order.</p>
-  <p>You have 20 seconds per round. Faster answers earn more points. In multiplayer, scores are calculated on the server and synced with your opponent.</p>
+ <div class="panel"><button class="secondary" id="howBack">← Back</button><h2 id="howTitle">How to Play</h2>
+  <p id="howFind">🎯 Find the odd color on the board.</p>
+  <p id="howMatch">🎨 Choose the exact matching color.</p>
+  <p id="howMemory">🧠 Watch the color sequence, then repeat it in order.</p>
+  <p id="howScoring">Each round has its own time limit. Faster correct answers earn more points. Online matches use 10 rounds per set; first to 3 set wins takes the series.</p>
  </div>
 </section>
 
 <section id="settings" class="screen hidden">
  <div class="panel">
-  <div class="row"><button class="secondary" id="settingsBack">← Back</button><span class="pill">Multiplayer Connection</span></div>
-  <h2>Connection Settings</h2>
-  <p class="muted">Enter your Supabase Project URL and anon / publishable key only.</p>
+  <div class="row"><button class="secondary" id="settingsBack">← Back</button><span class="pill" id="connectionBadge">Multiplayer Connection</span></div>
+  <h2 id="settingsTitle">Connection Settings</h2>
+  <p class="muted" id="settingsDescription">Enter your Supabase Project URL and anon / publishable key only.</p>
   <label for="supabaseUrl">Supabase Project URL</label><input class="field" id="supabaseUrl" inputmode="url" placeholder="https://your-project.supabase.co">
   <label for="supabaseKey">Supabase anon / publishable key</label><input class="field" id="supabaseKey" type="password" placeholder="eyJhbGciOi...">
   <div class="actions"><button class="primary" id="saveSettings">Save & Test Connection</button><button class="secondary" id="clearSettings">Clear Settings</button></div>
