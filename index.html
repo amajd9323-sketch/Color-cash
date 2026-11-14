@@ -246,7 +246,8 @@ const colors = ['#ff4f87','#48d9f6','#a47aff','#5ce6a7','#ffc857','#ff874d','#6f
 const rand = n => Math.floor(Math.random()*n);
 const pick = a => a[rand(a.length)];
 const shuffle = a => [...a].sort(()=>Math.random()-.5);
-let backend=null, currentUser=null, room=null, roomChannel=null;
+let backend=null, currentUser=null, room=null, roomChannel=null, eventChannel=null;
+let currentChallenge=null, powerupUsed=new Set(), audioContext=null, freezeTimeout=null;
 let gameMode='solo', soloDeck=[], soloAnswers=[], soloRound=0, soloScore=0, botScore=0;
 let gameTimer=null, roundStartedAt=0, remaining=30, roundLocked=false, multiSubmitted=false, lastRenderedRound=-1, memoryInput=[];
 let language=['en','tr'].includes(localStorage.getItem('ccLanguage'))?localStorage.getItem('ccLanguage'):'en';
@@ -414,7 +415,7 @@ async function connectBackend(urlInput,keyInput){
  const {data,error}=await client.auth.getSession();if(error)throw error;
  let session=data.session;
  if(!session){const result=await client.auth.signInAnonymously();if(result.error)throw new Error('Anonymous sign-in failed. Enable Anonymous Sign-Ins in Supabase. '+result.error.message);session=result.data.session}
- backend=client;currentUser=session.user;localStorage.setItem('ccSupabase',JSON.stringify(cfg));setConnection('Connected to game server',true);return client;
+ backend=client;currentUser=session.user;localStorage.setItem('ccSupabase',JSON.stringify(cfg));setConnection('Connected to game server',true);await loadProfile();return client;
 }
 async function requireBackend(){
  if(backend&&currentUser)return backend;
@@ -735,6 +736,117 @@ async function leaveMultiRoom(){
  multiChannel=null;multiRoom=null;multiPenaltySubmittedKick=-1;multiPlantResolving=false;show('home');
 }
 
+
+const profileDefaults={avatar:'🟦',theme:'neon'};
+function prefs(){try{return JSON.parse(localStorage.getItem('ccPrefs')||'{}')}catch{return {}}}
+function applyPrefs(){
+ const p=prefs();document.body.dataset.theme=p.theme||'neon';
+ $('avatarSelect').value=p.avatar||'🟦';$('themeSelect').value=p.theme||'neon';
+ $('soundToggle').textContent=(p.sound===false?'🔇 Sound: Off':'🔊 Sound: On');
+ $('vibrationToggle').textContent=(p.vibrate===false?'📴 Vibration: Off':'📳 Vibration: On');
+}
+function saveLocalPrefs(){
+ const p=prefs();p.avatar=$('avatarSelect').value;p.theme=$('themeSelect').value;localStorage.setItem('ccPrefs',JSON.stringify(p));applyPrefs();
+}
+function playFx(kind='tap'){
+ const p=prefs();if(p.sound===false)return;
+ try{
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  audioContext=audioContext||new AC();if(audioContext.state==='suspended')audioContext.resume();
+  const osc=audioContext.createOscillator(),gain=audioContext.createGain();
+  const notes={tap:520,correct:760,win:980,lose:190,reaction:640,power:430};
+  osc.frequency.value=notes[kind]||520;osc.type='sine';gain.gain.setValueAtTime(.0001,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.09,audioContext.currentTime+.015);gain.gain.exponentialRampToValueAtTime(.0001,audioContext.currentTime+.18);
+  osc.connect(gain);gain.connect(audioContext.destination);osc.start();osc.stop(audioContext.currentTime+.19);
+ }catch{}
+}
+function vibrate(pattern=25){if(prefs().vibrate!==false&&navigator.vibrate)navigator.vibrate(pattern)}
+async function loadProfile(){
+ if(!backend||!currentUser)return;
+ const p=prefs();
+ const {data,error}=await backend.rpc('cc_profile_save',{p_name:localPlayerName,p_avatar:p.avatar||'🟦',p_theme:p.theme||'neon'});
+ if(error)throw error;
+ $('friendCode').textContent=data.friend_code||'--------';
+ $('avatarSelect').value=data.avatar||'🟦';$('themeSelect').value=data.theme||'neon';
+ const {data:friends,error:friendsError}=await backend.rpc('cc_friends_list');if(friendsError)throw friendsError;
+ renderFriends(friends||[]);
+ applyPrefs();
+}
+function renderFriends(friends){
+ const root=$('friendsList');root.innerHTML='';
+ if(!friends.length){root.textContent=tr('noFriends');return}
+ friends.forEach(friend=>{
+  const row=document.createElement('div');row.className='friend-item';
+  const label=document.createElement('span');label.textContent=(friend.avatar||'🟦')+' '+friend.display_name+' · '+friend.friend_code;
+  const invite=document.createElement('button');invite.className='secondary';invite.textContent=tr('inviteFriend');
+  invite.onclick=async()=>{try{await navigator.clipboard.writeText(friend.friend_code);message('profileMessage',tr('friendCodeCopied'))}catch{message('profileMessage',friend.friend_code)}};
+  row.append(label,invite);root.appendChild(row);
+ });
+}
+async function saveProfile(){
+ try{
+  saveLocalPrefs();
+  const db=await requireBackend();const {data,error}=await db.rpc('cc_profile_save',{p_name:localPlayerName,p_avatar:$('avatarSelect').value,p_theme:$('themeSelect').value});
+  if(error)throw error;$('friendCode').textContent=data.friend_code;message('profileMessage',tr('profileSaved'));playFx('correct');
+ }catch(e){message('profileMessage',e.message||String(e))}
+}
+async function addFriend(){
+ const code=$('friendCodeInput').value.trim().toUpperCase();if(!code)return;
+ try{const db=await requireBackend();const {data,error}=await db.rpc('cc_friend_add',{p_friend_code:code});if(error)throw error;
+  $('friendCodeInput').value='';message('profileMessage',data.status==='accepted'?tr('friendAdded'):tr('friendRequestSent'));await loadProfile();
+ }catch(e){message('profileMessage',e.message||String(e))}
+}
+async function joinRoomEvents(code){
+ if(eventChannel&&backend){try{await backend.removeChannel(eventChannel)}catch{}}
+ eventChannel=backend.channel('cc-room-events-'+code).on('postgres_changes',{event:'INSERT',schema:'public',table:'cc_room_events',filter:'code=eq.'+code},payload=>handleRoomEvent(payload.new)).subscribe();
+}
+function handleRoomEvent(ev){
+ if(!ev||ev.actor_id===currentUser?.id)return;
+ if(ev.event_type==='reaction'){
+  const emoji=ev.payload?.emoji||'👏';message('reactionNotice',emoji+' '+tr('opponentReaction'));playFx('reaction');vibrate(18);return;
+ }
+ if(ev.event_type==='powerup:freeze'){
+  $('gameContent').querySelectorAll('button').forEach(b=>b.disabled=true);
+  message('feedback',tr('frozen'));playFx('power');vibrate([35,35,35]);
+  clearTimeout(freezeTimeout);freezeTimeout=setTimeout(()=>{if(!multiSubmitted)$('gameContent').querySelectorAll('button').forEach(b=>b.disabled=false);message('feedback',tr('freezeEnded'))},2600);
+ }
+}
+async function sendRoomEvent(type,payload={}){
+ const db=await requireBackend();const {error}=await db.rpc('cc_room_event_send',{p_code:room.code,p_event_type:type,p_payload:payload});if(error)throw error;
+}
+async function usePowerup(type){
+ const key=(room?.set_number||'solo')+':'+type;
+ if(powerupUsed.has(key)||roundLocked||multiSubmitted)return;
+ if(type==='extra_time'){
+  roundStartedAt-=8000;remaining+=8;$('timer').textContent=remaining.toFixed(1);
+ }else if(type==='reveal'){
+  revealChallenge();
+ }else if(type==='freeze'){
+  if(!room||gameMode!=='online'){message('feedback',tr('onlineOnly'));return}
+ }
+ try{
+  if(room&&gameMode==='online')await sendRoomEvent('powerup:'+type,{});
+  powerupUsed.add(key);const btn=$('power'+(type==='extra_time'?'Extra':type==='reveal'?'Reveal':'Freeze'));if(btn)btn.disabled=true;
+  message('feedback',tr('powerUsed'));playFx('power');vibrate(40);
+ }catch(e){message('feedback',e.message||String(e))}
+}
+function revealChallenge(){
+ const c=currentChallenge;if(!c)return;
+ if(c.type==='find'){
+  const unique=c.tiles.reduce((a,v,i)=>{if(!a.includes(v))a.push(v);return a},[]);
+  c.tiles.forEach((v,i)=>{if(unique.indexOf(v)>0||c.special==='double'&&v!==unique[0])$('gameContent').querySelectorAll('.tile')[i]?.classList.add('revealed')});
+ }else if(c.type==='match'){
+  const answer=c.correctColor||c.target;
+  const buttons=[...$('gameContent').querySelectorAll('.choice')];const idx=c.options.indexOf(answer);if(idx>=0)buttons[idx]?.classList.add('revealed');
+ }else{
+  const idx=c.sequence[c.sequence.length-1];$('gameContent').querySelectorAll('.choice')[idx]?.classList.add('revealed');
+ }
+}
+function sendReaction(emoji){
+ if(!room||gameMode!=='online'){message('feedback',tr('onlineOnly'));return}
+ sendRoomEvent('reaction',{emoji}).catch(e=>message('feedback',e.message||String(e)));
+ message('reactionNotice',emoji);playFx('reaction');vibrate(18);
+}
+
 $('solo').onclick=startSolo;
 
 $('openXO').onclick=()=>openMultiLobby('xo');
@@ -762,6 +874,13 @@ $('playerName').value=localPlayerName;setBest();
 $('languageSelect').value=language;
 $('difficultySelect').value=localStorage.getItem('ccDifficulty')||'normal';
 $('languageSelect').onchange=()=>{language=$('languageSelect').value;localStorage.setItem('ccLanguage',language);applyLanguage()};
+$('saveProfile').onclick=saveProfile;$('addFriend').onclick=addFriend;
+$('avatarSelect').onchange=saveLocalPrefs;$('themeSelect').onchange=saveLocalPrefs;
+$('soundToggle').onclick=()=>{const p=prefs();p.sound=p.sound===false?true:false;localStorage.setItem('ccPrefs',JSON.stringify(p));applyPrefs();playFx('tap')};
+$('vibrationToggle').onclick=()=>{const p=prefs();p.vibrate=p.vibrate===false?true:false;localStorage.setItem('ccPrefs',JSON.stringify(p));applyPrefs();vibrate(30)};
+$('powerExtra').onclick=()=>usePowerup('extra_time');$('powerReveal').onclick=()=>usePowerup('reveal');$('powerFreeze').onclick=()=>usePowerup('freeze');
+document.querySelectorAll('[data-reaction]').forEach(b=>b.onclick=()=>sendReaction(b.dataset.reaction));
+applyPrefs();
 $('difficultySelect').onchange=()=>localStorage.setItem('ccDifficulty',$('difficultySelect').value);
 applyLanguage();
 const initialConfig=getConfig();if(initialConfig){setConnection('Connecting to game server');connectBackend(initialConfig.url,initialConfig.key).catch(e=>{setConnection('Solo play available');console.warn('Supabase connection:',e.message)})}
