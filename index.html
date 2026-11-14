@@ -552,7 +552,7 @@ function showOnlineResult(){
 function escapeText(value){return String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function leaveRealtime(showHome=true){
  stopTimer();if(eventChannel&&backend){try{await backend.removeChannel(eventChannel)}catch{}}eventChannel=null;if(roomChannel&&backend){try{await backend.removeChannel(roomChannel)}catch{}}
- roomChannel=null;room=null;lastRenderedRound=-1;multiSubmitted=false;
+ roomChannel=null;room=null;lastRenderedRound=-1;multiSubmitted=false;powerupUsed.clear();['powerExtra','powerReveal','powerFreeze'].forEach(id=>$(id).disabled=false);
  if(showHome)show('home');
 }
 function openSettings(){
