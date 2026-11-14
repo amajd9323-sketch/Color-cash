@@ -877,6 +877,7 @@ function finishSoloRound(correct,timedOut=false){
   $('nextRound').classList.remove('hidden');
   $('nextRound').onclick=()=>{if(soloAdvanceTimeout){clearTimeout(soloAdvanceTimeout);soloAdvanceTimeout=null;}soloRound++;renderSoloRound()};
  }
+}
 function finishSolo(){
  stopTimer();localStorage.setItem('ccBest',String(Math.max(Number(localStorage.getItem('ccBest')||0),soloScore)));setBest();
  $('finalScore').textContent=soloScore;$('resultTitle').textContent=soloScore>=botScore?tr('youBeatComputer'):tr('computerWon');playFx(soloScore>=botScore?'win':'lose');
