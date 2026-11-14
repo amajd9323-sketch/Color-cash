@@ -103,6 +103,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
   <p id="seriesHint" class="muted center" style="font-size:13px;margin:12px 0 0">Online series: 10 rounds per set. First player to win 3 sets wins.</p>
   <div class="profile-panel" id="profilePanel">
    <h3 id="profileTitle">Player Profile</h3>
+   <label id="profileNameLabel" for="profileName">Display Name</label><input class="field" id="profileName" maxlength="18" placeholder="Your display name">
    <div class="row"><label id="avatarLabel" for="avatarSelect">Avatar</label><select class="field" id="avatarSelect"><option>🟦</option><option>🟥</option><option>🟩</option><option>🟨</option><option>🐱</option><option>🦊</option><option>🐼</option><option>🐸</option><option>👾</option><option>🤖</option></select></div>
    <div class="row"><label id="themeLabel" for="themeSelect">Theme</label><select class="field" id="themeSelect"><option value="neon">Neon</option><option value="sunset">Sunset</option><option value="ocean">Ocean</option><option value="forest">Forest</option><option value="candy">Candy</option></select></div>
    <div class="actions"><button class="secondary" id="saveProfile">Save Profile</button><button class="secondary" id="soundToggle">🔊 Sound: On</button><button class="secondary" id="vibrationToggle">📳 Vibration: On</button></div>
@@ -273,6 +274,7 @@ en:{
  preparingSet:'Preparing set {set}...',submitWaiting:'Your answer was submitted. Waiting for your opponent...',correctWaiting:'Correct! +{points} points. Waiting for the other player.',answerWaiting:'Answer locked. Waiting for the other player.',
  setWon:'You won Set {set}!',setLost:'Your friend won Set {set}.',setDraw:'Set {set} is a draw!',seriesWon:'YOU WON THE SERIES!',seriesLost:'Your friend won the series.',nextSet:'Play Set {set}',waitingHost:'Waiting for host to start Set {set}',
  seriesScore:'Series wins — You: {you} | Opponent: {opponent}',setScore:'Set score — You: {you} | Opponent: {opponent}',firstToThree:'First player to 3 set wins takes the series.',roomLabel:'Room: {code}',
+ profileTitle:'Player Profile',profileName:'Display Name',avatar:'Avatar',theme:'Theme',saveProfile:'Save Profile',soundOn:'🔊 Sound: On',soundOff:'🔇 Sound: Off',vibrationOn:'📳 Vibration: On',vibrationOff:'📴 Vibration: Off',yourFriendCode:'Your Friend Code',friendCodePlaceholder:'Friend code',addFriend:'Add Friend',noFriends:'No friends added yet.',inviteFriend:'Copy code',profileSaved:'Profile saved!',friendAdded:'Friend added!',friendRequestSent:'Friend request sent.',friendCodeCopied:'Friend code copied.',onlineOnly:'Available in online rooms only.',powerUsed:'Power-up activated!',frozen:'Frozen! You cannot answer for a moment.',freezeEnded:'You can play again!',opponentReaction:'Your opponent reacted!',doubleHint:'SPECIAL: Find BOTH different tiles.',reverseHint:'SPECIAL: Watch the sequence, then enter it in REVERSE order.',closeHint:'SPECIAL: Pick the color that is almost identical to the target.',
  connectedSuccessfully:'Connected successfully. You can now create a room or join a friend.'
 },
 tr:{
@@ -292,6 +294,7 @@ tr:{
  preparingSet:'{set}. set hazırlanıyor...',submitWaiting:'Cevabın gönderildi. Rakip bekleniyor...',correctWaiting:'Doğru! +{points} puan. Diğer oyuncu bekleniyor.',answerWaiting:'Cevap kilitlendi. Diğer oyuncu bekleniyor.',
  setWon:'{set}. seti kazandın!',setLost:'Arkadaşın {set}. seti kazandı.',setDraw:'{set}. set berabere!',seriesWon:'SERİYİ KAZANDIN!',seriesLost:'Arkadaşın seriyi kazandı.',nextSet:'{set}. Sete Başla',waitingHost:'Ev sahibinin {set}. seti başlatması bekleniyor',
  seriesScore:'Seri galibiyetleri — Sen: {you} | Rakip: {opponent}',setScore:'Set skoru — Sen: {you} | Rakip: {opponent}',firstToThree:'İlk 3 seti kazanan seriyi kazanır.',roomLabel:'Oda: {code}',
+ profileTitle:'Oyuncu Profili',profileName:'Görünen Ad',avatar:'Avatar',theme:'Tema',saveProfile:'Profili Kaydet',soundOn:'🔊 Ses: Açık',soundOff:'🔇 Ses: Kapalı',vibrationOn:'📳 Titreşim: Açık',vibrationOff:'📴 Titreşim: Kapalı',yourFriendCode:'Arkadaş Kodun',friendCodePlaceholder:'Arkadaş kodu',addFriend:'Arkadaş Ekle',noFriends:'Henüz arkadaş eklenmedi.',inviteFriend:'Kodu Kopyala',profileSaved:'Profil kaydedildi!',friendAdded:'Arkadaş eklendi!',friendRequestSent:'Arkadaşlık isteği gönderildi.',friendCodeCopied:'Arkadaş kodu kopyalandı.',onlineOnly:'Yalnızca çevrimiçi odalarda kullanılabilir.',powerUsed:'Güçlendirici etkinleştirildi!',frozen:'Donduruldun! Bir süre cevap veremezsin.',freezeEnded:'Tekrar oynayabilirsin!',opponentReaction:'Rakibin tepki gönderdi!',doubleHint:'ÖZEL: Farklı olan İKİ kareyi bul.',reverseHint:'ÖZEL: Renk sırasını izle ve TERSİNDEN gir.',closeHint:'ÖZEL: Hedef renge neredeyse aynı olan rengi seç.',
  connectedSuccessfully:'Bağlantı başarılı. Artık oda oluşturabilir veya arkadaşına katılabilirsin.'
 }
 };
@@ -312,6 +315,8 @@ function applyLanguage(){
  $('lobbyBack').textContent=tr('back');$('howBack').textContent=tr('back');$('settingsBack').textContent=tr('back');
  $('howTitle').textContent=tr('howToPlay');$('howFind').textContent=tr('findColor');$('howMatch').textContent=tr('colorMatch');$('howMemory').textContent=tr('memory');$('howScoring').textContent=tr('howScoring');
  $('connectionBadge').textContent=tr('settingsBadge');$('settingsTitle').textContent=tr('settingsTitle');$('settingsDescription').textContent=tr('settingsDescription');
+ $('profileTitle').textContent=tr('profileTitle');$('profileNameLabel').textContent=tr('profileName');$('avatarLabel').textContent=tr('avatar');$('themeLabel').textContent=tr('theme');$('saveProfile').textContent=tr('saveProfile');$('friendCodeLabel').textContent=tr('yourFriendCode');$('friendCodeInput').placeholder=tr('friendCodePlaceholder');$('addFriend').textContent=tr('addFriend');
+ $('soundToggle').textContent=prefs().sound===false?tr('soundOff'):tr('soundOn');$('vibrationToggle').textContent=prefs().vibrate===false?tr('vibrationOff'):tr('vibrationOn');
  $('onlineRoomLabel').textContent=tr('onlineRoom');$('roomCodeLabel').textContent=tr('roomCode');$('hostLabel').textContent=tr('host');$('guestLabel').textContent=tr('player2');$('yourPointsLabel').textContent=tr('yourPoints');
  $('urlLabel').textContent=tr('urlLabel');$('keyLabel').textContent=tr('keyLabel');$('settingsNote').innerHTML=tr('lobbySetupNote');
  $('saveSettings').textContent=tr('saveTest');$('clearSettings').textContent=tr('clearSettings');$('lobbySetupNote').textContent=tr('lobbySetupNote');
@@ -389,7 +394,7 @@ function renderChallenge(challenge,submit){
   const palette=document.createElement('div');palette.className='palette';challenge.options.forEach(color=>{const btn=document.createElement('button');btn.className='choice';btn.style.background=color;btn.setAttribute('aria-label','Choose a color');btn.onclick=()=>submit(color);palette.appendChild(btn)});$('gameContent').appendChild(palette);
  }else{
   const palette=document.createElement('div');palette.className='palette';palette.style.gridTemplateColumns='repeat('+Math.min(4,challenge.palette.length)+',minmax(0,1fr))';
-  challenge.palette.forEach((color,i)=>{const btn=document.createElement('button');btn.className='choice';btn.style.background=color;btn.disabled=true;btn.onclick=()=>{memoryInput.push(i);btn.classList.add('memory-on');setTimeout(()=>btn.classList.remove('memory-on'),180);if(memoryInput.length===challenge.sequence.length){const answer=challenge.reverse?[...memoryInput].reverse():memoryInput;submit(answer.join(','))}};palette.appendChild(btn)});$('gameContent').appendChild(palette);
+  challenge.palette.forEach((color,i)=>{const btn=document.createElement('button');btn.className='choice';btn.style.background=color;btn.disabled=true;btn.onclick=()=>{memoryInput.push(i);btn.classList.add('memory-on');setTimeout(()=>btn.classList.remove('memory-on'),180);if(memoryInput.length===challenge.sequence.length){submit(memoryInput.join(','))}};palette.appendChild(btn)});$('gameContent').appendChild(palette);
   const info=document.createElement('p');info.className='center muted';info.id='memoryInfo';info.textContent=tr('watchColors');$('gameContent').appendChild(info);
   let step=0;const flash=()=>{if(step>=challenge.sequence.length){info.textContent=tr('yourTurn');palette.querySelectorAll('button').forEach(btn=>btn.disabled=false);return}
    const btn=palette.children[challenge.sequence[step]];btn.classList.add('memory-on');setTimeout(()=>btn.classList.remove('memory-on'),410);step++;setTimeout(flash,590)
@@ -760,8 +765,8 @@ function prefs(){try{return JSON.parse(localStorage.getItem('ccPrefs')||'{}')}ca
 function applyPrefs(){
  const p=prefs();document.body.dataset.theme=p.theme||'neon';
  $('avatarSelect').value=p.avatar||'🟦';$('themeSelect').value=p.theme||'neon';
- $('soundToggle').textContent=(p.sound===false?'🔇 Sound: Off':'🔊 Sound: On');
- $('vibrationToggle').textContent=(p.vibrate===false?'📴 Vibration: Off':'📳 Vibration: On');
+ $('soundToggle').textContent=p.sound===false?tr('soundOff'):tr('soundOn');
+ $('vibrationToggle').textContent=p.vibrate===false?tr('vibrationOff'):tr('vibrationOn');
 }
 function saveLocalPrefs(){
  const p=prefs();p.avatar=$('avatarSelect').value;p.theme=$('themeSelect').value;localStorage.setItem('ccPrefs',JSON.stringify(p));applyPrefs();
@@ -783,7 +788,7 @@ async function loadProfile(){
  const p=prefs();
  const {data,error}=await backend.rpc('cc_profile_save',{p_name:localPlayerName,p_avatar:p.avatar||'🟦',p_theme:p.theme||'neon'});
  if(error)throw error;
- $('friendCode').textContent=data.friend_code||'--------';
+ $('friendCode').textContent=data.friend_code||'--------';$('profileName').value=data.display_name||localPlayerName;
  $('avatarSelect').value=data.avatar||'🟦';$('themeSelect').value=data.theme||'neon';
  const {data:friends,error:friendsError}=await backend.rpc('cc_friends_list');if(friendsError)throw friendsError;
  renderFriends(friends||[]);
@@ -803,7 +808,8 @@ function renderFriends(friends){
 async function saveProfile(){
  try{
   saveLocalPrefs();
-  const db=await requireBackend();const {data,error}=await db.rpc('cc_profile_save',{p_name:localPlayerName,p_avatar:$('avatarSelect').value,p_theme:$('themeSelect').value});
+  const db=await requireBackend();localPlayerName=($('profileName').value||'Player').trim().slice(0,18)||'Player';localStorage.setItem('ccPlayerName',localPlayerName);
+  const {data,error}=await db.rpc('cc_profile_save',{p_name:localPlayerName,p_avatar:$('avatarSelect').value,p_theme:$('themeSelect').value});
   if(error)throw error;$('friendCode').textContent=data.friend_code;message('profileMessage',tr('profileSaved'));playFx('correct');
  }catch(e){message('profileMessage',e.message||String(e))}
 }
@@ -894,6 +900,7 @@ $('difficultySelect').value=localStorage.getItem('ccDifficulty')||'normal';
 $('languageSelect').onchange=()=>{language=$('languageSelect').value;localStorage.setItem('ccLanguage',language);applyLanguage()};
 $('saveProfile').onclick=saveProfile;$('addFriend').onclick=addFriend;
 $('avatarSelect').onchange=saveLocalPrefs;$('themeSelect').onchange=saveLocalPrefs;
+$('profileName').value=localPlayerName;
 $('soundToggle').onclick=()=>{const p=prefs();p.sound=p.sound===false?true:false;localStorage.setItem('ccPrefs',JSON.stringify(p));applyPrefs();playFx('tap')};
 $('vibrationToggle').onclick=()=>{const p=prefs();p.vibrate=p.vibrate===false?true:false;localStorage.setItem('ccPrefs',JSON.stringify(p));applyPrefs();vibrate(30)};
 $('powerExtra').onclick=()=>usePowerup('extra_time');$('powerReveal').onclick=()=>usePowerup('reveal');$('powerFreeze').onclick=()=>usePowerup('freeze');
