@@ -63,7 +63,7 @@ label{display:block;font-size:13px;color:#c3cbe2;margin-top:10px}.center{text-al
 hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 @media(max-width:520px){.difficulty-row{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.panel{padding:16px}.tiles{gap:6px}.tile{border-radius:8px}.wrap{padding:12px 12px 35px}.mode{min-height:105px}}
 
-/* HEMA x Merve multi-game hub */
+/* HEMA x Mervie multi-game hub */
 .creator-credit{margin:15px auto 0;padding:12px 16px;max-width:520px;border:1px solid #3b496a;border-radius:15px;background:linear-gradient(110deg,#1b2140,#241932);color:#e9eaff;font-size:13px;line-height:1.7;text-align:center}
 .creator-credit strong{color:var(--cyan)}.creator-credit .gift{color:#ff91c5}
 .multi-title{margin:8px 0 12px;font-size:20px}.game-card .emoji{font-size:30px}.game-card{min-height:140px}
@@ -120,7 +120,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
    <button class="mode game-card" id="openPlant"><div class="emoji">🌱</div><h3>Name, Plant, Animal, Object</h3><p>Three rounds with random letters and points for answers.</p></button>
    <button class="mode game-card" id="openPenalty"><div class="emoji">⚽</div><h3>Penalty Shootout</h3><p>Take shots or make saves. Five kicks per player.</p></button>
   </div>
-  <div class="creator-credit"><strong>Created by HEMA</strong><br><span class="gift">Made with love as a gift for Merve ❤️</span></div>
+  <div class="creator-credit"><strong>Created by HEMA</strong><br><span class="gift">Friendly competition with Mervie • 1 vs 1</span></div>
 
  </div>
 </section>
@@ -159,7 +159,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
   <div class="actions powerup-bar" id="powerupBar">
    <button class="secondary" id="powerExtra">⏱ +8s</button><button class="secondary" id="powerReveal">🔎 Reveal</button><button class="secondary" id="powerFreeze">❄️ Freeze</button>
   </div>
-  <div class="actions reaction-bar" id="reactionBar"><button class="secondary" data-reaction="🔥">🔥</button><button class="secondary" data-reaction="😂">😂</button><button class="secondary" data-reaction="👏">👏</button><button class="secondary" data-reaction="😈">😈</button><button class="secondary" data-reaction="❤️">❤️</button></div>
+  <div class="actions reaction-bar" id="reactionBar"><button class="secondary" data-reaction="🔥">🔥</button><button class="secondary" data-reaction="😂">😂</button><button class="secondary" data-reaction="👏">👏</button><button class="secondary" data-reaction="😈">😈</button><button class="secondary" data-reaction="😎">😎</button></div>
   <p id="reactionNotice" class="center statusline"></p>
   <h3 id="modeLabel" class="center"></h3><p id="hint" class="center muted"></p>
   <div id="gameContent"></div>
@@ -237,7 +237,7 @@ hr{border:0;border-top:1px solid var(--line);margin:18px 0}
   <div class="actions"><button class="secondary" id="multiGameHome">Home</button></div>
  </div>
 </section>
-<div class="foot credit-footer">COLOR CLASH • Play smart. Win with color!<br><strong>HEMA</strong> × <strong>Merve</strong> ❤️<br>Created by HEMA — A gift for Merve</div>
+<div class="foot credit-footer">COLOR CLASH • Play smart. Win with color!<br><strong>HEMA</strong> • <strong>Mervie</strong><br>Created by HEMA — Built for friendly 1 vs 1 challenges</div>
 </main>
 
 <script>
@@ -896,7 +896,7 @@ $('multiJoin').onclick=joinMultiRoom;
 $('multiStart').onclick=startMultiGame;
 $('multiLeave').onclick=leaveMultiRoom;
 $('multiCopy').onclick=async()=>{try{await navigator.clipboard.writeText(multiRoom.code);message('multiMessage','Code copied.')}catch{message('multiMessage','Copy this code: '+multiRoom.code)}};
-$('multiShare').onclick=async()=>{const text='Join '+multiGameNames[multiType]+'! Room Code: '+multiRoom.code;try{if(navigator.share)await navigator.share({title:'HEMA × Merve Games',text});else{await navigator.clipboard.writeText(text);message('multiMessage','Invite message copied.')}}catch{}};
+$('multiShare').onclick=async()=>{const text='Join '+multiGameNames[multiType]+'! Room Code: '+multiRoom.code;try{if(navigator.share)await navigator.share({title:'HEMA × Mervie Games',text});else{await navigator.clipboard.writeText(text);message('multiMessage','Invite message copied.')}}catch{}};
 $('create').onclick=()=>openLobby('create');$('join').onclick=()=>openLobby('join');$('how').onclick=()=>show('howScreen');
 $('settingsOpen').onclick=openSettings;$('settingsBack').onclick=()=>show('home');$('lobbyBack').onclick=()=>leaveRealtime(true);$('howBack').onclick=()=>show('home');
 $('createRoom').onclick=createRoom;$('joinRoom').onclick=joinRoom;$('startOnline').onclick=startOnline;
