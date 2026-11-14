@@ -383,6 +383,24 @@ hr{border:0;border-top:1px solid var(--line);margin:19px 0}
  *,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
 
+
+/* Small-screen gameplay polish and accessible answer feedback */
+#feedback.feedback-success{color:var(--green);font-weight:850}
+#feedback.feedback-error{color:#ff9baa;font-weight:750}
+.challenge-board{transition:opacity .18s ease,transform .18s ease}
+.challenge-board.answer-correct{animation:answerCorrect .42s ease}
+.challenge-board.answer-wrong{animation:answerWrong .25s ease}
+@keyframes answerCorrect{0%{transform:scale(1)}45%{transform:scale(1.012)}100%{transform:scale(1)}}
+@keyframes answerWrong{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+@media(max-height:740px) and (max-width:560px){
+ .challenge-heading{margin:13px 0 7px}
+ .challenge-heading h3{font-size:18px;margin:4px 0}
+ .target{min-height:78px;margin:8px auto}
+ .choice{min-height:54px}
+ .tiles,.palette{margin:11px auto}
+ .game-reactions{margin-top:9px;padding-top:8px}
+ .reaction-bar{margin-top:5px}
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -399,7 +417,7 @@ hr{border:0;border-top:1px solid var(--line);margin:19px 0}
    <span class="hero-kicker"><i></i> COLOR CLASH <b>/</b> QUICK DUEL</span>
    <h1 id="homeHeroTitle">Find the color.<br><em>Own the round.</em></h1>
    <p id="homeHeroText">Fast eyes. Sharp memory. One winner.</p>
-   <div class="hero-tags"><span>1 VS 1 ONLINE</span><span>3 CHALLENGE TYPES</span></div>
+   <div class="hero-tags"><span id="heroTagOnline">1 VS 1 ONLINE</span><span id="heroTagModes">3 CHALLENGE TYPES</span></div>
   </div>
   <div class="hero-art" aria-hidden="true">
    <div class="art-ring ring-one"></div><div class="art-ring ring-two"></div>
@@ -470,7 +488,7 @@ hr{border:0;border-top:1px solid var(--line);margin:19px 0}
    </div>
   </div>
  </details>
- <div class="home-footer"><span>COLOR CLASH</span><span>MADE FOR THE NEXT REMATCH</span></div>
+ <div class="home-footer"><span>COLOR CLASH</span><span id="homeFooterTag">MADE FOR THE NEXT REMATCH</span></div>
 </section>
 
 <section id="lobby" class="screen hidden">
@@ -480,7 +498,7 @@ hr{border:0;border-top:1px solid var(--line);margin:19px 0}
   <label id="playerNameLabel" for="playerName">Player Name</label><input class="field" id="playerName" maxlength="18" placeholder="Enter your name">
   <div id="createControls"><button class="primary" id="createRoom">Create Room</button></div>
   <div id="joinControls" class="hidden">
-   <label id="roomInputLabel" for="roomInput">Room Code</label><input class="field" id="roomInput" maxlength="6" placeholder="ABC123" autocapitalize="characters">
+   <label id="roomInputLabel" for="roomInput">Room Code</label><input class="field" id="roomInput" maxlength="6" placeholder="ABC123" autocapitalize="characters" autocomplete="off" spellcheck="false">
    <button class="primary" id="joinRoom">Join Room</button>
   </div>
   <div id="roomInfo" class="hidden">
@@ -502,8 +520,8 @@ hr{border:0;border-top:1px solid var(--line);margin:19px 0}
  <div class="panel game-panel">
   <div class="game-toolbar">
    <button class="secondary exit-button" id="quitGame">Exit</button>
-   <div class="round-indicator"><small>ROUND</small><strong id="roundLabel">Round 1 / 10</strong></div>
-   <div class="timer-wrap"><small>TIME LEFT</small><span class="timer" id="timer">20.0</span></div>
+   <div class="round-indicator"><small id="roundCaption">ROUND</small><strong id="roundLabel">Round 1 / 10</strong></div>
+   <div class="timer-wrap"><small id="timeCaption">TIME LEFT</small><span class="timer" id="timer">20.0</span></div>
   </div>
   <div class="bar game-progress"><i id="progress"></i></div>
   <div class="row game-score-row"><div class="scorebox" id="youLabel">Your Score<strong id="youScore">0</strong></div><div class="scorebox" id="opLabel">Opponent<strong id="opScore">0</strong></div></div>
@@ -512,15 +530,15 @@ hr{border:0;border-top:1px solid var(--line);margin:19px 0}
    <button class="secondary" id="powerExtra">⏱ +5s</button><button class="secondary" id="powerReveal">🔎 Hint</button><button class="secondary" id="powerFreeze">❄️ Freeze</button>
   </div>
   <p id="powerupInfo" class="center muted hidden" style="font-size:12px">2 power-ups per set • one per round • using one costs 25% of this round’s points</p></div>
-  <div class="challenge-heading"><span class="section-kicker">FOCUS MODE</span><h3 id="modeLabel" class="center"></h3><p id="hint" class="center muted"></p></div>
+  <div class="challenge-heading"><span class="section-kicker" id="focusCaption">FOCUS MODE</span><h3 id="modeLabel" class="center"></h3><p id="hint" class="center muted"></p></div>
   <div id="gameContent" class="challenge-board"></div>
-  <div class="game-feedback center"><p id="feedback" class="statusline"></p><button class="primary hidden" id="nextRound">Next Round →</button></div>
-  <div class="game-reactions"><p class="reaction-caption">QUICK REACTIONS</p><div class="actions reaction-bar" id="reactionBar"><button class="secondary" data-reaction="🔥">🔥</button><button class="secondary" data-reaction="😂">😂</button><button class="secondary" data-reaction="👏">👏</button><button class="secondary" data-reaction="😈">😈</button><button class="secondary" data-reaction="😎">😎</button></div><p id="reactionNotice" class="center statusline"></p></div>
+  <div class="game-feedback center"><p id="feedback" class="statusline" aria-live="polite"></p><button class="primary hidden" id="nextRound">Next Round →</button></div>
+  <div class="game-reactions"><p class="reaction-caption" id="reactionCaption">QUICK REACTIONS</p><div class="actions reaction-bar" id="reactionBar"><button class="secondary" data-reaction="🔥">🔥</button><button class="secondary" data-reaction="😂">😂</button><button class="secondary" data-reaction="👏">👏</button><button class="secondary" data-reaction="😈">😈</button><button class="secondary" data-reaction="😎">😎</button></div><p id="reactionNotice" class="center statusline"></p></div>
  </div>
 </section>
 
 <section id="result" class="screen hidden">
- <div class="panel result-panel center"><div class="result-trophy">✦</div><span class="section-kicker">MATCH COMPLETE</span><h2 id="resultTitle">Challenge Complete!</h2><div class="result-score-wrap"><h1 id="finalScore">0</h1><p id="yourPointsLabel">Your Points</p></div>
+ <div class="panel result-panel center"><div class="result-trophy">✦</div><span class="section-kicker" id="matchComplete">MATCH COMPLETE</span><h2 id="resultTitle">Challenge Complete!</h2><div class="result-score-wrap"><h1 id="finalScore">0</h1><p id="yourPointsLabel">Your Points</p></div>
   <div id="resultRows"></div><div class="actions result-actions"><button class="primary" id="playAgain">Play Again</button><button class="secondary" id="resultHome">Home</button></div>
  </div>
 </section>
@@ -540,7 +558,7 @@ hr{border:0;border-top:1px solid var(--line);margin:19px 0}
   <h2 id="settingsTitle">Connection Settings</h2>
   <p class="muted" id="settingsDescription">Enter your Supabase Project URL and anon / publishable key only.</p>
   <label id="urlLabel" for="supabaseUrl">Supabase Project URL</label><input class="field" id="supabaseUrl" inputmode="url" placeholder="https://your-project.supabase.co">
-  <label id="keyLabel" for="supabaseKey">Supabase anon / publishable key</label><input class="field" id="supabaseKey" type="password" placeholder="eyJhbGciOi...">
+  <label id="keyLabel" for="supabaseKey">Supabase anon / publishable key</label><input class="field" id="supabaseKey" type="password" placeholder="Public anon / publishable key">
   <div class="actions"><button class="primary" id="saveSettings">Save & Test Connection</button><button class="secondary" id="clearSettings">Clear Settings</button></div>
   <p id="settingsMessage" class="statusline"></p>
   <div class="note" id="settingsNote">Before connecting: create a Supabase project, enable Anonymous Sign-Ins in Authentication, then run <b>supabase.sql</b> once, followed by <b>supabase-games-upgrade.sql</b> in the SQL Editor. Never use a service_role key.</div>
@@ -603,7 +621,7 @@ let backend=null, currentUser=null, room=null, roomChannel=null, eventChannel=nu
 let currentChallenge=null, powerupUsed=new Set(), audioContext=null, freezeTimeout=null;
 let powerupSetUses=0, powerupRoundUsed=false, powerupStatusLoading=false, powerupTypesUsed=new Set();
 let gameMode='solo', soloDeck=[], soloAnswers=[], soloRound=0, soloScore=0, botScore=0;
-let gameTimer=null, roundStartedAt=0, remaining=30, roundLocked=false, multiSubmitted=false, lastRenderedRound=-1, memoryInput=[];
+let gameTimer=null, roundStartedAt=0, remaining=30, roundLocked=false, multiSubmitted=false, lastRenderedRound=-1, memoryInput=[], soloAdvanceTimeout=null;
 let powerupTimeBonus=0, frozenUntil=0;
 let language=['en','tr'].includes(localStorage.getItem('ccLanguage'))?localStorage.getItem('ccLanguage'):'en';
 let connectionMessage='Solo mode available';
@@ -643,7 +661,14 @@ en:{
  emptyAchievements:'Play more sets to unlock achievements.',
  achievementFirst:'First Victory',achievementFive:'Five Wins',achievementStreak:'Hot Streak',achievementPerfect:'Perfect Focus',achievementFair:'Fair Play',
  resultWin:'WIN',resultLoss:'LOSS',resultDraw:'DRAW',matchesLabel:'Matches',
- powerupLoading:'Checking power-up charges...'
+ powerupLoading:'Checking power-up charges...',
+ roundCaption:'ROUND',timeCaption:'TIME LEFT',focusCaption:'FOCUS MODE',reactionCaption:'QUICK REACTIONS',matchComplete:'MATCH COMPLETE',
+ heroTagOnline:'1 VS 1 ONLINE',heroTagModes:'3 CHALLENGE TYPES',homeFooterTag:'MADE FOR THE NEXT REMATCH',
+ profileNamePlaceholder:'Your display name',roomCodePlaceholder:'ABC123',supabaseUrlPlaceholder:'https://your-project.supabase.co',supabaseKeyPlaceholder:'Public anon / publishable key',
+ powerExtraLabel:'⏱ +5s Time',powerRevealLabel:'🔎 Hint',powerFreezeLabel:'❄️ Freeze',
+ continueRound:'Continue',autoNext:'Next puzzle loading…',tileAria:'Tile {number}',chooseColor:'Choose a color',
+ themeNeon:'Neon',themeSunset:'Sunset',themeOcean:'Ocean',themeForest:'Forest',themeCandy:'Candy',
+ createRoomFailed:'Could not create room',joinRoomFailed:'Could not join room',submitFailed:'Could not submit answer',startMatchFailed:'Could not start match',powerupStatusFailed:'Power-up status unavailable'
 },
 tr:{
  settings:'Ayarlar',soloAvailable:'Tek oyunculu mod kullanılabilir',connecting:'Oyun sunucusuna bağlanıyor',connected:'Oyun sunucusuna bağlandı',disconnected:'Bağlantı kesildi',
@@ -677,7 +702,14 @@ tr:{
  emptyAchievements:'Başarım açmak için daha fazla set oyna.',
  achievementFirst:'İlk Zafer',achievementFive:'Beş Galibiyet',achievementStreak:'Seri Galibiyet',achievementPerfect:'Kusursuz Odak',achievementFair:'Adil Oyun',
  resultWin:'GALİBİYET',resultLoss:'MAĞLUBİYET',resultDraw:'BERABERLİK',matchesLabel:'Maçlar',
- powerupLoading:'Güçlendirici hakları kontrol ediliyor...'
+ powerupLoading:'Güçlendirici hakları kontrol ediliyor...',
+ roundCaption:'TUR',timeCaption:'KALAN SÜRE',focusCaption:'ODAK MODU',reactionCaption:'HIZLI TEPKİLER',matchComplete:'MAÇ TAMAMLANDI',
+ heroTagOnline:'1 VS 1 ÇEVRİMİÇİ',heroTagModes:'3 GÖREV TÜRÜ',homeFooterTag:'YENİDEN OYNAMAYA HAZIR MISIN?',
+ profileNamePlaceholder:'Görünen adın',roomCodePlaceholder:'ABC123',supabaseUrlPlaceholder:'https://projeniz.supabase.co',supabaseKeyPlaceholder:'Genel anon / publishable anahtarı',
+ powerExtraLabel:'⏱ +5 sn',powerRevealLabel:'🔎 İpucu',powerFreezeLabel:'❄️ Dondur',
+ continueRound:'Devam Et',autoNext:'Sonraki bulmaca yükleniyor…',tileAria:'Kare {number}',chooseColor:'Bir renk seç',
+ themeNeon:'Neon',themeSunset:'Gün Batımı',themeOcean:'Okyanus',themeForest:'Orman',themeCandy:'Şeker',
+ createRoomFailed:'Oda oluşturulamadı',joinRoomFailed:'Odaya katılınamadı',submitFailed:'Cevap gönderilemedi',startMatchFailed:'Maç başlatılamadı',powerupStatusFailed:'Güçlendirici durumu alınamadı'
 }
 };
 const connectionKeys={'Solo mode available':'soloAvailable','Solo play available':'soloAvailable','Connecting to game server':'connecting','Connected to game server':'connected','Disconnected':'disconnected'};
@@ -687,11 +719,16 @@ function message(id,text){const el=$(id);if(el)el.textContent=text||''}
 function setConnection(text,good=false){connectionMessage=text;$('connection').textContent='● '+tr(connectionKeys[text]||text);$('connection').style.color=good?'#55efad':'#c3cbe2'}
 function applyLanguage(){
  document.documentElement.lang=language;
+ document.documentElement.dir='ltr';
+ document.body.dataset.language=language;
  const selectors=[['#solo h3','soloTitle'],['#solo p','soloDesc'],['#create h3','createTitle'],['#create p','createDesc'],['#join h3','joinTitle'],['#join p','joinDesc'],['#how h3','howTitle'],['#how p','howDesc']];
  for(const [selector,key] of selectors){const el=document.querySelector(selector);if(el)el.textContent=tr(key)}
  $('languageSelect').value=language;$('settingsOpen').textContent='⚙ '+tr('settings');
  $('homeHeroTitle').innerHTML=tr('heroTitle').replace('. ','.<br><em>').replace(/\.$/,'</em>');
  $('homeHeroText').textContent=tr('heroDesc');$('chooseModeTitle').textContent=tr('chooseMode');
+ $('heroTagOnline').textContent=tr('heroTagOnline');$('heroTagModes').textContent=tr('heroTagModes');$('homeFooterTag').textContent=tr('homeFooterTag');
+ $('roundCaption').textContent=tr('roundCaption');$('timeCaption').textContent=tr('timeCaption');$('focusCaption').textContent=tr('focusCaption');$('reactionCaption').textContent=tr('reactionCaption');$('matchComplete').textContent=tr('matchComplete');
+ $('powerExtra').textContent=tr('powerExtraLabel');$('powerReveal').textContent=tr('powerRevealLabel');$('powerFreeze').textContent=tr('powerFreezeLabel');
  $('soloActionKicker').textContent=tr('soloKicker');$('createActionKicker').textContent=tr('createKicker');$('joinActionKicker').textContent=tr('joinKicker');
  $('profileSummaryTitle').textContent=tr('profileSummary');$('profileSummaryDesc').textContent=tr('profileSummaryDesc');$('difficultyHint').textContent=tr('difficultyHint');$('bestLabel').textContent=tr('bestLabel');
  $('difficultyLabel').textContent=tr('difficulty');for(const option of $('difficultySelect').options)option.textContent=tr(option.value);
@@ -703,14 +740,19 @@ function applyLanguage(){
  $('lobbyBack').textContent=tr('back');$('howBack').textContent=tr('back');$('settingsBack').textContent=tr('back');
  $('howTitle').textContent=tr('howToPlay');$('howFind').textContent=tr('findColor');$('howMatch').textContent=tr('colorMatch');$('howMemory').textContent=tr('memory');$('howScoring').textContent=tr('howScoring');
  $('connectionBadge').textContent=tr('settingsBadge');$('settingsTitle').textContent=tr('settingsTitle');$('settingsDescription').textContent=tr('settingsDescription');
- $('profileTitle').textContent=tr('profileTitle');$('profileNameLabel').textContent=tr('profileName');$('avatarLabel').textContent=tr('avatar');$('themeLabel').textContent=tr('theme');$('saveProfile').textContent=tr('saveProfile');$('friendCodeLabel').textContent=tr('yourFriendCode');$('friendCodeInput').placeholder=tr('friendCodePlaceholder');$('addFriend').textContent=tr('addFriend');
+ $('profileTitle').textContent=tr('profileTitle');$('profileName').placeholder=tr('profileNamePlaceholder');
+ $('roomInput').placeholder=tr('roomCodePlaceholder');$('supabaseUrl').placeholder=tr('supabaseUrlPlaceholder');$('supabaseKey').placeholder=tr('supabaseKeyPlaceholder');
+ $('profileNameLabel').textContent=tr('profileName');$('avatarLabel').textContent=tr('avatar');$('themeLabel').textContent=tr('theme');$('saveProfile').textContent=tr('saveProfile');$('friendCodeLabel').textContent=tr('yourFriendCode');$('friendCodeInput').placeholder=tr('friendCodePlaceholder');$('addFriend').textContent=tr('addFriend');
  $('soundToggle').textContent=prefs().sound===false?tr('soundOff'):tr('soundOn');$('vibrationToggle').textContent=prefs().vibrate===false?tr('vibrationOff'):tr('vibrationOn');
+ const themeKeys={neon:'themeNeon',sunset:'themeSunset',ocean:'themeOcean',forest:'themeForest',candy:'themeCandy'};
+ for(const option of $('themeSelect').options)option.textContent=tr(themeKeys[option.value]||option.value);
  $('onlineRoomLabel').textContent=tr('onlineRoom');$('roomCodeLabel').textContent=tr('roomCode');$('hostLabel').textContent=tr('host');$('guestLabel').textContent=tr('player2');$('yourPointsLabel').textContent=tr('yourPoints');
  $('urlLabel').textContent=tr('urlLabel');$('keyLabel').textContent=tr('keyLabel');$('settingsNote').innerHTML=tr('lobbySetupNote');
  $('saveSettings').textContent=tr('saveTest');$('clearSettings').textContent=tr('clearSettings');$('lobbySetupNote').textContent=tr('lobbySetupNote');
  $('createRoom').textContent=tr('createRoom');$('joinRoom').textContent=tr('joinRoom');$('copyCode').textContent=tr('copyCode');$('shareCode').textContent=tr('share');$('leaveRoom').textContent=tr('leaveRoom');$('startOnline').textContent=tr('startMatch');
  $('quitGame').textContent=tr('exit');$('nextRound').textContent=tr('nextRound');$('playAgain').textContent=tr('playAgain');$('resultHome').textContent=tr('home');
  $('connection').textContent='● '+tr(connectionKeys[connectionMessage]||connectionMessage);
+ if(!$('lobby').classList.contains('hidden'))$('lobbyTitle').textContent=$('createControls').classList.contains('hidden')?tr('joinRoomTitle'):tr('createRoomTitle');
  if(room&&room.status==='waiting')renderLobby();
  if(room&&room.status==='playing'){handleRoomLabels();if(room.deck?.[room.round])localizeChallenge(room.deck[room.round])}
  if(room&&room.status==='finished')showOnlineResult();
@@ -763,11 +805,18 @@ function makeDeck(difficulty=currentDifficulty(),count=10){
  return {deck,answers};
 }
 function localizeChallenge(challenge){
- $('modeLabel').textContent=challenge.type==='find'?tr('findTitle'):challenge.type==='match'?tr('matchTitle'):tr('memoryTitle');playFx('tap');
+ $('modeLabel').textContent=challenge.type==='find'?tr('findTitle'):challenge.type==='match'?tr('matchTitle'):tr('memoryTitle');
  $('hint').textContent=challenge.type==='find'?tr('findHint'):challenge.type==='match'?tr('matchHint'):tr('memoryHint');
+ if(challenge.special==='double')$('hint').textContent=tr('doubleHint');
+ if(challenge.special==='reverse')$('hint').textContent=tr('reverseHint');
+ if(challenge.special==='close')$('hint').textContent=tr('closeHint');
+ if(challenge.special==='speed')$('hint').textContent=tr('speedHint');
+ if(challenge.special==='quick_memory')$('hint').textContent=tr('quickMemoryHint');
+ const info=$('memoryInfo');
+ if(info)info.textContent=tr(info.dataset.state==='turn'?'yourTurn':'watchColors');
 }
 function renderChallenge(challenge,submit){
- roundLocked=false;memoryInput=[];currentChallenge=challenge;$('gameContent').innerHTML='';$('nextRound').classList.add('hidden');message('feedback','');message('reactionNotice','');
+ roundLocked=false;memoryInput=[];currentChallenge=challenge;$('gameContent').classList.remove('answer-correct','answer-wrong');$('gameContent').innerHTML='';$('nextRound').classList.add('hidden');message('feedback','');$('feedback').classList.remove('feedback-success','feedback-error');message('reactionNotice','');
  localizeChallenge(challenge);
  if(challenge.special==='double')$('hint').textContent=tr('doubleHint');
  if(challenge.special==='reverse')$('hint').textContent=tr('reverseHint');
@@ -777,24 +826,25 @@ function renderChallenge(challenge,submit){
  if(challenge.type==='find'){
   const grid=document.createElement('div');grid.className='tiles';grid.style.gridTemplateColumns='repeat('+(challenge.boardSide||5)+',minmax(0,1fr))';grid.style.maxWidth='560px';grid.style.margin='16px auto';
   const selected=[];
-  challenge.tiles.forEach((color,i)=>{const btn=document.createElement('button');btn.className='tile';btn.style.background=color;btn.setAttribute('aria-label','Tile '+(i+1));
+  challenge.tiles.forEach((color,i)=>{const btn=document.createElement('button');btn.className='tile';btn.style.background=color;btn.setAttribute('aria-label',tr('tileAria',{number:i+1}));
    btn.onclick=()=>{if(challenge.special==='double'){if(selected.includes(i)){selected.splice(selected.indexOf(i),1);btn.classList.remove('selected')}else if(selected.length<2){selected.push(i);btn.classList.add('selected')}if(selected.length===2)submit(selected.sort((x,y)=>x-y).join(','))}else submit(String(i))};
    grid.appendChild(btn)
   });$('gameContent').appendChild(grid);
  }else if(challenge.type==='match'){
   const target=document.createElement('div');target.className='target';target.style.background=challenge.target;target.textContent=tr('target');$('gameContent').appendChild(target);
-  const palette=document.createElement('div');palette.className='palette';challenge.options.forEach(color=>{const btn=document.createElement('button');btn.className='choice';btn.style.background=color;btn.setAttribute('aria-label','Choose a color');btn.onclick=()=>submit(color);palette.appendChild(btn)});$('gameContent').appendChild(palette);
+  const palette=document.createElement('div');palette.className='palette';challenge.options.forEach(color=>{const btn=document.createElement('button');btn.className='choice';btn.style.background=color;btn.setAttribute('aria-label',tr('chooseColor'));btn.onclick=()=>submit(color);palette.appendChild(btn)});$('gameContent').appendChild(palette);
  }else{
   const palette=document.createElement('div');palette.className='palette';palette.style.gridTemplateColumns='repeat('+Math.min(4,challenge.palette.length)+',minmax(0,1fr))';
   challenge.palette.forEach((color,i)=>{const btn=document.createElement('button');btn.className='choice';btn.style.background=color;btn.disabled=true;btn.onclick=()=>{memoryInput.push(i);btn.classList.add('memory-on');setTimeout(()=>btn.classList.remove('memory-on'),180);if(memoryInput.length===challenge.sequence.length){submit(memoryInput.join(','))}};palette.appendChild(btn)});$('gameContent').appendChild(palette);
-  const info=document.createElement('p');info.className='center muted';info.id='memoryInfo';info.textContent=tr('watchColors');$('gameContent').appendChild(info);
-  let step=0;const flash=()=>{if(step>=challenge.sequence.length){info.textContent=tr('yourTurn');palette.querySelectorAll('button').forEach(btn=>btn.disabled=Date.now()<frozenUntil);if(Date.now()<frozenUntil)setTimeout(()=>{if(!multiSubmitted&&!roundLocked&&$('memoryInfo')?.textContent===tr('yourTurn'))palette.querySelectorAll('button').forEach(btn=>btn.disabled=false)},Math.max(0,frozenUntil-Date.now()));return}
+  const info=document.createElement('p');info.className='center muted';info.id='memoryInfo';info.dataset.state='watch';info.textContent=tr('watchColors');$('gameContent').appendChild(info);
+  let step=0;const flash=()=>{if(step>=challenge.sequence.length){info.dataset.state='turn';info.textContent=tr('yourTurn');palette.querySelectorAll('button').forEach(btn=>btn.disabled=Date.now()<frozenUntil);if(Date.now()<frozenUntil)setTimeout(()=>{if(!multiSubmitted&&!roundLocked&&$('memoryInfo')?.textContent===tr('yourTurn'))palette.querySelectorAll('button').forEach(btn=>btn.disabled=false)},Math.max(0,frozenUntil-Date.now()));return}
    const quick=challenge.special==='quick_memory';const btn=palette.children[challenge.sequence[step]];btn.classList.add('memory-on');setTimeout(()=>btn.classList.remove('memory-on'),quick?210:410);step++;setTimeout(flash,quick?330:590)
   };setTimeout(flash,450);
  }
 }
 function updateScores(a,b){$('youScore').textContent=a;$('opScore').textContent=b}
 function startSolo(){
+ if(soloAdvanceTimeout){clearTimeout(soloAdvanceTimeout);soloAdvanceTimeout=null;}
  leaveRealtime(false);gameMode='solo';$('powerupBar').classList.add('hidden');powerupStatusLoading=true;powerupSetUses=0;powerupRoundUsed=false;powerupUsed.clear();['powerExtra','powerReveal','powerFreeze'].forEach(id=>$(id).disabled=true);const built=makeDeck(currentDifficulty(),15);soloDeck=built.deck;soloAnswers=built.answers;soloRound=0;soloScore=0;botScore=0;show('game');renderSoloRound();
 }
 function renderSoloRound(){
@@ -810,9 +860,23 @@ function finishSoloRound(correct,timedOut=false){
  const points=correct?Math.max(10,Math.round(100+remaining*8)):0;
  soloScore+=points;botScore+=rand(45)+20;updateScores(soloScore,botScore);
  $('gameContent').querySelectorAll('button').forEach(b=>b.disabled=true);
- message('feedback',timedOut?tr('timeUp'):correct?tr('correct',{points}):tr('wrong'));
- $('nextRound').classList.remove('hidden');$('nextRound').onclick=()=>{soloRound++;renderSoloRound()};
-}
+ $('gameContent').classList.toggle('answer-correct',correct&&!timedOut);
+ $('gameContent').classList.toggle('answer-wrong',!correct||timedOut);
+ $('feedback').classList.toggle('feedback-success',correct&&!timedOut);
+ $('feedback').classList.toggle('feedback-error',!correct||timedOut);
+ message('feedback',timedOut?tr('timeUp'):correct?tr('correct',{points})+' · '+tr('autoNext'):tr('wrong'));
+ if(correct&&!timedOut){
+  $('nextRound').classList.add('hidden');
+  if(soloAdvanceTimeout)clearTimeout(soloAdvanceTimeout);
+  soloAdvanceTimeout=setTimeout(()=>{
+   soloAdvanceTimeout=null;
+   if(gameMode==='solo'&&roundLocked&&!$('game').classList.contains('hidden')){soloRound++;renderSoloRound()}
+  },560);
+ }else{
+  $('nextRound').textContent=tr('continueRound');
+  $('nextRound').classList.remove('hidden');
+  $('nextRound').onclick=()=>{if(soloAdvanceTimeout){clearTimeout(soloAdvanceTimeout);soloAdvanceTimeout=null;}soloRound++;renderSoloRound()};
+ }
 function finishSolo(){
  stopTimer();localStorage.setItem('ccBest',String(Math.max(Number(localStorage.getItem('ccBest')||0),soloScore)));setBest();
  $('finalScore').textContent=soloScore;$('resultTitle').textContent=soloScore>=botScore?tr('youBeatComputer'):tr('computerWon');playFx(soloScore>=botScore?'win':'lose');
@@ -851,7 +915,7 @@ async function createRoom(){
   const db=await requireBackend();const code=makeRoomCode();
   const {data,error}=await db.rpc('cc_create_room',{p_code:code,p_name:playerName()});if(error)throw error;
   room=data;await joinRealtime(code);$('createControls').classList.add('hidden');$('joinControls').classList.add('hidden');$('roomInfo').classList.remove('hidden');renderLobby();
- }catch(e){message('lobbyMessage','Could not create room: '+(e.message||e))}finally{btn.disabled=false}
+ }catch(e){message('lobbyMessage',tr('createRoomFailed')+': '+(e.message||e))}finally{btn.disabled=false}
 }
 async function joinRoom(){
  const btn=$('joinRoom');btn.disabled=true;message('lobbyMessage',tr('searchingRoom'));
@@ -860,7 +924,7 @@ async function joinRoom(){
   if(!/^[A-Z0-9]{6}$/.test(code))throw new Error(tr('roomCodeMustSix'));
   const {data,error}=await db.rpc('cc_join_room',{p_code:code,p_name:playerName()});if(error)throw error;
   room=data;await joinRealtime(code);$('createControls').classList.add('hidden');$('joinControls').classList.add('hidden');$('roomInfo').classList.remove('hidden');renderLobby();
- }catch(e){message('lobbyMessage','Could not join room: '+(e.message||e))}finally{btn.disabled=false}
+ }catch(e){message('lobbyMessage',tr('joinRoomFailed')+': '+(e.message||e))}finally{btn.disabled=false}
 }
 async function joinRealtime(code){
  if(roomChannel){await backend.removeChannel(roomChannel);roomChannel=null}
@@ -910,7 +974,7 @@ async function startOnline(){
   const db=await requireBackend();const built=makeDeck(currentDifficulty(),10);
   const {error}=await db.rpc('cc_start_room',{p_code:room.code,p_deck:built.deck,p_answers:built.answers});if(error)throw error;
   lastRenderedRound=-1;multiSubmitted=false;await refreshRoom();
- }catch(e){message('lobbyMessage','Could not start match: '+(e.message||e));btn.disabled=false;$('playAgain').disabled=false}
+ }catch(e){message('lobbyMessage',tr('startMatchFailed')+': '+(e.message||e));btn.disabled=false;$('playAgain').disabled=false}
 }
 async function submitMulti(answer){
  if(multiSubmitted||!room||room.status!=='playing')return;
@@ -920,7 +984,7 @@ async function submitMulti(answer){
   const db=await requireBackend();const {data,error}=await db.rpc('cc_submit_answer',{p_code:room.code,p_answer:String(answer),p_elapsed_ms:spent});if(error)throw error;
   await refreshRoom();
   if(room?.status==='playing'&&room.round===submittedRound)message('feedback',data?.correct?(data?.powerup_penalty?tr('powerupPenalty')+' +'+data.points:tr('correctWaiting',{points:data.points})):tr('answerWaiting'));
- }catch(e){multiSubmitted=false;renderPowerupControls();message('feedback','Could not submit answer: '+(e.message||e));}
+ }catch(e){multiSubmitted=false;renderPowerupControls();message('feedback',tr('submitFailed')+': '+(e.message||e));}
 }
 function showOnlineResult(){
  stopTimer();loadMatchHistory().catch(e=>console.warn('Match history:',e.message));playFx((isHost()?room.host_score>room.guest_score:room.guest_score>room.host_score)?'win':'lose');vibrate([50,30,70]);
@@ -1263,7 +1327,7 @@ async function loadPowerupUsage(){
   if(!room||room.code!==code||room.set_number!==setNo||room.round!==roundNo||currentUser?.id!==uid)return;
   powerupSetUses=(data||[]).length;powerupRoundUsed=(data||[]).some(e=>Number(e.round)===Number(roundNo));powerupTypesUsed=new Set((data||[]).map(e=>e.event_type));
   powerupStatusLoading=false;renderPowerupControls();
- }catch(e){powerupStatusLoading=true;renderPowerupControls();message('feedback','Power-up status unavailable: '+(e.message||e))}
+ }catch(e){powerupStatusLoading=true;renderPowerupControls();message('feedback',tr('powerupStatusFailed')+': '+(e.message||e))}
 }
 function renderMatchHistoryPlaceholder(){}
 async function saveProfile(){
@@ -1358,7 +1422,7 @@ $('settingsOpen').onclick=openSettings;$('settingsBack').onclick=()=>show('home'
 $('createRoom').onclick=createRoom;$('joinRoom').onclick=joinRoom;$('startOnline').onclick=startOnline;
 $('copyCode').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);message('lobbyMessage',tr('codeCopied'))}catch{message('lobbyMessage',tr('manualCode',{code:room.code}))}};
 $('shareCode').onclick=async()=>{const text=tr('shareInvite',{code:room.code});try{if(navigator.share)await navigator.share({title:'Color Clash',text});else{await navigator.clipboard.writeText(text);message('lobbyMessage',tr('codeCopied'))}}catch{}};
-$('leaveRoom').onclick=()=>leaveRealtime(true);$('quitGame').onclick=()=>{if(gameMode==='online')leaveRealtime(true);else{stopTimer();show('home')}};
+$('leaveRoom').onclick=()=>leaveRealtime(true);$('quitGame').onclick=()=>{if(gameMode==='online')leaveRealtime(true);else{if(soloAdvanceTimeout){clearTimeout(soloAdvanceTimeout);soloAdvanceTimeout=null;}stopTimer();show('home')}};
 $('nextRound').onclick=()=>{};$('playAgain').onclick=()=>{if(gameMode==='solo')startSolo();else if(gameMode==='online'&&room&&room.status==='finished'&&Math.max(Number(room.host_wins||0),Number(room.guest_wins||0))<3&&isHost())startOnline()};$('resultHome').onclick=()=>leaveRealtime(true);
 $('saveSettings').onclick=saveSettings;$('clearSettings').onclick=()=>{localStorage.removeItem('ccSupabase');backend=null;currentUser=null;$('supabaseUrl').value='';$('supabaseKey').value='';setConnection('Solo mode available');message('settingsMessage',tr('settingsCleared'))};
 $('playerName').value=localPlayerName;setBest();
