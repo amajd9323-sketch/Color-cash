@@ -262,6 +262,8 @@ hr{border:0;border-top:1px solid var(--line);margin:19px 0}
 .timer{display:block;color:var(--cyan);font-size:24px;font-weight:950;font-variant-numeric:tabular-nums;line-height:1.15}
 .game-progress{height:6px;margin:13px 0 16px;background:#27364d}
 .game-progress i{border-radius:10px;background:linear-gradient(90deg,var(--cyan),var(--purple));box-shadow:0 0 12px #75e9e577}
+.timer.timer-warning{color:#ff8f9d!important;text-shadow:0 0 16px #ff536c66;animation:timerPulse .8s ease-in-out infinite alternate}
+@keyframes timerPulse{to{opacity:.72}}
 .game-score-row{gap:10px}
 .scorebox{background:#17243a;border:1px solid #30425b;border-radius:15px;padding:10px 13px;text-align:left;color:#9cadc2;font-size:10px;font-weight:750;min-width:0}
 .scorebox strong{display:block;margin-top:3px;font-size:23px;line-height:1.1;color:#f5f8fc;font-weight:950;font-variant-numeric:tabular-nums}
@@ -521,9 +523,9 @@ hr{border:0;border-top:1px solid var(--line);margin:19px 0}
   <div class="game-toolbar">
    <button class="secondary exit-button" id="quitGame">Exit</button>
    <div class="round-indicator"><small id="roundCaption">ROUND</small><strong id="roundLabel">Round 1 / 10</strong></div>
-   <div class="timer-wrap"><small id="timeCaption">TIME LEFT</small><span class="timer" id="timer">20.0</span></div>
+   <div class="timer-wrap"><small id="timeCaption">TIME LEFT</small><span class="timer" id="timer" role="timer" aria-live="off" aria-label="Time left">20.0</span></div>
   </div>
-  <div class="bar game-progress"><i id="progress"></i></div>
+  <div class="bar game-progress" role="progressbar" aria-label="Round progress" aria-valuemin="0" aria-valuemax="15" aria-valuenow="0"><i id="progress"></i></div>
   <div class="row game-score-row"><div class="scorebox" id="youLabel">Your Score<strong id="youScore">0</strong></div><div class="scorebox" id="opLabel">Opponent<strong id="opScore">0</strong></div></div>
   <p id="seriesScore" class="center muted hidden"></p>
   <div class="powerup-wrap"><div class="actions powerup-bar hidden" id="powerupBar">
@@ -620,7 +622,7 @@ const shuffle = a => [...a].sort(()=>Math.random()-.5);
 let backend=null, currentUser=null, room=null, roomChannel=null, eventChannel=null;
 let currentChallenge=null, powerupUsed=new Set(), audioContext=null, freezeTimeout=null;
 let powerupSetUses=0, powerupRoundUsed=false, powerupStatusLoading=false, powerupTypesUsed=new Set();
-let gameMode='solo', soloDeck=[], soloAnswers=[], soloRound=0, soloScore=0, botScore=0;
+let gameMode='solo', soloDeck=[], soloAnswers=[], soloRound=0, soloScore=0, botScore=0, soloCorrect=0, soloResponseTimes=[];
 let gameTimer=null, roundStartedAt=0, remaining=30, roundLocked=false, multiSubmitted=false, lastRenderedRound=-1, memoryInput=[], soloAdvanceTimeout=null;
 let powerupTimeBonus=0, frozenUntil=0;
 let language=['en','tr'].includes(localStorage.getItem('ccLanguage'))?localStorage.getItem('ccLanguage'):'en';
@@ -639,6 +641,7 @@ en:{
  createRoomTitle:'Create Room',joinRoomTitle:'Join Room',waitingPlayer:'Waiting for Player 2...',bothReady:'Both players are ready. The host can start the match.',waitingPlayer2:'Waiting for Player 2 to join...',roomStatus:'Room status: {status}',
  roundOf:'Round {current} / {total}',yourScore:'Your Score',opponent:'Opponent',computer:'Computer',nextRound:'Next Round →',exit:'Exit',
  findTitle:'Find the Odd Color',matchTitle:'Color Match',memoryTitle:'Memory Challenge',findHint:'Choose the tile that is different from the others.',matchHint:'Choose the exact color that matches the target.',memoryHint:'Memorize the sequence, then tap the colors in the same order.',target:'Target Color',watchColors:'Watch the colors...',yourTurn:'Your turn!',
+ soloCorrectLabel:'Correct answers',soloAccuracyLabel:'Accuracy',soloBestTimeLabel:'Best response',leaveMatchConfirm:'Leave this match? Your current progress will be lost.',
  correct:'Correct! +{points} points',wrong:'Incorrect answer. Try again next round.',timeUp:'Time is up!',youBeatComputer:'You beat the computer!',computerWon:'The computer won this time',
  soloResultRows:'<p>Your Score: <b>{you}</b></p><p>Computer score: <b>{opponent}</b></p>',playAgain:'Play Again',home:'Home',back:'← Back',howToPlay:'How to Play',
  findColor:'🎯 Find the odd color on the board.',colorMatch:'🎨 Choose the exact matching color.',memory:'🧠 Watch the color sequence, then repeat it in order.',
@@ -662,7 +665,7 @@ en:{
  achievementFirst:'First Victory',achievementFive:'Five Wins',achievementStreak:'Hot Streak',achievementPerfect:'Perfect Focus',achievementFair:'Fair Play',
  resultWin:'WIN',resultLoss:'LOSS',resultDraw:'DRAW',matchesLabel:'Matches',
  powerupLoading:'Checking power-up charges...',
- roundCaption:'ROUND',timeCaption:'TIME LEFT',focusCaption:'FOCUS MODE',reactionCaption:'QUICK REACTIONS',matchComplete:'MATCH COMPLETE',
+ roundCaption:'ROUND',timeCaption:'TIME LEFT',timeLeft:'Time left',roundProgress:'Round progress',focusCaption:'FOCUS MODE',reactionCaption:'QUICK REACTIONS',matchComplete:'MATCH COMPLETE',
  heroTagOnline:'1 VS 1 ONLINE',heroTagModes:'3 CHALLENGE TYPES',homeFooterTag:'MADE FOR THE NEXT REMATCH',heroKicker:'QUICK DUEL',homeSectionKicker:'YOUR NEXT MOVE',footerTagline:'Play smart. Win with color!',footerCredits:'Created by HEMA — Built for friendly 1 vs 1 challenges',
  profileNamePlaceholder:'Your display name',roomCodePlaceholder:'ABC123',supabaseUrlPlaceholder:'https://your-project.supabase.co',supabaseKeyPlaceholder:'Public anon / publishable key',
  powerExtraLabel:'⏱ +5s Time',powerRevealLabel:'🔎 Hint',powerFreezeLabel:'❄️ Freeze',
@@ -680,6 +683,7 @@ tr:{
  createRoomTitle:'Oda Oluştur',joinRoomTitle:'Odaya Katıl',waitingPlayer:'2. oyuncu bekleniyor...',bothReady:'İki oyuncu hazır. Ev sahibi maçı başlatabilir.',waitingPlayer2:'2. oyuncunun katılması bekleniyor...',roomStatus:'Oda durumu: {status}',
  roundOf:'Tur {current} / {total}',yourScore:'Senin Puanın',opponent:'Rakip',computer:'Bilgisayar',nextRound:'Sonraki Tur →',exit:'Çıkış',
  findTitle:'Farklı Rengi Bul',matchTitle:'Renk Eşleştirme',memoryTitle:'Hafıza Görevi',findHint:'Diğerlerinden farklı olan kareye dokun.',matchHint:'Hedef renkle tamamen aynı olan rengi seç.',memoryHint:'Renk sırasını ezberle ve aynı sırayla dokun.',target:'Hedef Renk',watchColors:'Renkleri izle...',yourTurn:'Senin sıran!',
+ soloCorrectLabel:'Doğru cevaplar',soloAccuracyLabel:'Doğruluk',soloBestTimeLabel:'En iyi tepki',leaveMatchConfirm:'Bu maçtan ayrılmak istiyor musun? Mevcut ilerlemen kaybolacak.',
  correct:'Doğru! +{points} puan',wrong:'Yanlış cevap. Sonraki turda tekrar dene.',timeUp:'Süre doldu!',youBeatComputer:'Bilgisayarı yendin!',computerWon:'Bu kez bilgisayar kazandı',
  soloResultRows:'<p>Senin puanın: <b>{you}</b></p><p>Bilgisayar puanı: <b>{opponent}</b></p>',playAgain:'Tekrar Oyna',home:'Ana Sayfa',back:'← Geri',howToPlay:'Nasıl Oynanır?',
  findColor:'🎯 Tahtadaki farklı rengi bul.',colorMatch:'🎨 Hedefle aynı olan rengi seç.',memory:'🧠 Renk sırasını izle ve tekrar et.',
@@ -703,7 +707,7 @@ tr:{
  achievementFirst:'İlk Zafer',achievementFive:'Beş Galibiyet',achievementStreak:'Seri Galibiyet',achievementPerfect:'Kusursuz Odak',achievementFair:'Adil Oyun',
  resultWin:'GALİBİYET',resultLoss:'MAĞLUBİYET',resultDraw:'BERABERLİK',matchesLabel:'Maçlar',
  powerupLoading:'Güçlendirici hakları kontrol ediliyor...',
- roundCaption:'TUR',timeCaption:'KALAN SÜRE',focusCaption:'ODAK MODU',reactionCaption:'HIZLI TEPKİLER',matchComplete:'MAÇ TAMAMLANDI',
+ roundCaption:'TUR',timeCaption:'KALAN SÜRE',timeLeft:'Kalan süre',roundProgress:'Tur ilerlemesi',focusCaption:'ODAK MODU',reactionCaption:'HIZLI TEPKİLER',matchComplete:'MAÇ TAMAMLANDI',
  heroTagOnline:'1 VS 1 ÇEVRİMİÇİ',heroTagModes:'3 GÖREV TÜRÜ',homeFooterTag:'YENİDEN OYNAMAYA HAZIR MISIN?',heroKicker:'HIZLI DÜELLO',homeSectionKicker:'SIRADAKİ HAMLE',footerTagline:'Akıllıca oyna. Renklerle kazan!',footerCredits:'HEMA tarafından oluşturuldu — Dostça 1 VS 1 mücadeleleri için',
  profileNamePlaceholder:'Görünen adın',roomCodePlaceholder:'ABC123',supabaseUrlPlaceholder:'https://projeniz.supabase.co',supabaseKeyPlaceholder:'Genel anon / publishable anahtarı',
  powerExtraLabel:'⏱ +5 sn',powerRevealLabel:'🔎 İpucu',powerFreezeLabel:'❄️ Dondur',
@@ -727,7 +731,7 @@ function applyLanguage(){
  $('homeHeroTitle').innerHTML=tr('heroTitle').replace('. ','.<br><em>').replace(/\.$/,'</em>');
  $('homeHeroText').textContent=tr('heroDesc');$('chooseModeTitle').textContent=tr('chooseMode');
  $('heroTagOnline').textContent=tr('heroTagOnline');$('heroTagModes').textContent=tr('heroTagModes');$('homeFooterTag').textContent=tr('homeFooterTag');$('heroKickerLabel').textContent=tr('heroKicker');$('homeSectionKicker').textContent=tr('homeSectionKicker');$('footerTagline').textContent=tr('footerTagline');$('footerCredits').textContent=tr('footerCredits');
- $('roundCaption').textContent=tr('roundCaption');$('timeCaption').textContent=tr('timeCaption');$('focusCaption').textContent=tr('focusCaption');$('reactionCaption').textContent=tr('reactionCaption');$('matchComplete').textContent=tr('matchComplete');
+ $('roundCaption').textContent=tr('roundCaption');$('timeCaption').textContent=tr('timeCaption');$('timer').setAttribute('aria-label',tr('timeLeft'));$('.game-progress').setAttribute('aria-label',tr('roundProgress'));$('focusCaption').textContent=tr('focusCaption');$('reactionCaption').textContent=tr('reactionCaption');$('matchComplete').textContent=tr('matchComplete');
  $('powerExtra').textContent=tr('powerExtraLabel');$('powerReveal').textContent=tr('powerRevealLabel');$('powerFreeze').textContent=tr('powerFreezeLabel');
  $('soloActionKicker').textContent=tr('soloKicker');$('createActionKicker').textContent=tr('createKicker');$('joinActionKicker').textContent=tr('joinKicker');
  $('profileSummaryTitle').textContent=tr('profileSummary');$('profileSummaryDesc').textContent=tr('profileSummaryDesc');$('difficultyHint').textContent=tr('difficultyHint');$('bestLabel').textContent=tr('bestLabel');
@@ -755,14 +759,15 @@ function applyLanguage(){
  if(!$('lobby').classList.contains('hidden')){const roomKind=room?(isHost()?'createRoomTitle':'joinRoomTitle'):($('joinControls').classList.contains('hidden')?'createRoomTitle':'joinRoomTitle');$('lobbyTitle').textContent=tr(roomKind)}
  if(room&&room.status==='waiting')renderLobby();
  if(room&&room.status==='playing'){handleRoomLabels();if(room.deck?.[room.round])localizeChallenge(room.deck[room.round])}
- if(room&&room.status==='finished')showOnlineResult();
+ if(room&&room.status==='finished'&&!$('result').classList.contains('hidden'))showOnlineResult(false);
  if(gameMode==='solo'&&!$('game').classList.contains('hidden')){ $('roundLabel').textContent=tr('roundOf',{current:soloRound+1,total:soloDeck.length});$('youLabel').firstChild.textContent=tr('yourScore');$('opLabel').firstChild.textContent=tr('computer');if(soloDeck[soloRound])localizeChallenge(soloDeck[soloRound])}
+ if(gameMode==='solo'&&!$('result').classList.contains('hidden'))renderSoloResult();
 }
 function stopTimer(){if(gameTimer){clearInterval(gameTimer);gameTimer=null}}
 function elapsed(){return Math.max(0,Math.min(35000,Date.now()-roundStartedAt))}
 function startTimer(onTimeout,seconds=30){
- stopTimer();const total=Math.max(5,Math.min(60,Number(seconds)||30));remaining=total;roundStartedAt=Date.now();powerupTimeBonus=0;frozenUntil=0;$('timer').textContent=remaining.toFixed(1);
- gameTimer=setInterval(()=>{remaining=Math.max(0,total+powerupTimeBonus/1000-(Date.now()-roundStartedAt)/1000);$('timer').textContent=remaining.toFixed(1);if(remaining<=0){stopTimer();onTimeout()}},100);
+ stopTimer();const total=Math.max(5,Math.min(60,Number(seconds)||30));remaining=total;roundStartedAt=Date.now();powerupTimeBonus=0;frozenUntil=0;$('timer').classList.remove('timer-warning');$('timer').textContent=remaining.toFixed(1);
+ gameTimer=setInterval(()=>{remaining=Math.max(0,total+powerupTimeBonus/1000-(Date.now()-roundStartedAt)/1000);$('timer').textContent=remaining.toFixed(1);$('timer').classList.toggle('timer-warning',remaining<=10);if(remaining<=0){stopTimer();onTimeout()}},100);
 }
 function setBest(){$('best').textContent=tr('bestScore')+': '+(Number(localStorage.getItem('ccBest')||0))}
 function currentDifficulty(){return $('difficultySelect')?.value||localStorage.getItem('ccDifficulty')||'normal'}
@@ -843,20 +848,21 @@ function renderChallenge(challenge,submit){
  }
 }
 function updateScores(a,b){$('youScore').textContent=a;$('opScore').textContent=b}
+function setProgress(current,total){const max=Math.max(1,Number(total)||1),value=Math.max(0,Math.min(max,Number(current)||0));$('progress').style.width=(value/max*100)+'%';const bar=$('.game-progress');bar.setAttribute('aria-valuemax',String(max));bar.setAttribute('aria-valuenow',String(value))}
 function startSolo(){
- if(soloAdvanceTimeout){clearTimeout(soloAdvanceTimeout);soloAdvanceTimeout=null;}
- leaveRealtime(false);gameMode='solo';$('powerupBar').classList.add('hidden');powerupStatusLoading=true;powerupSetUses=0;powerupRoundUsed=false;powerupUsed.clear();['powerExtra','powerReveal','powerFreeze'].forEach(id=>$(id).disabled=true);const built=makeDeck(currentDifficulty(),15);soloDeck=built.deck;soloAnswers=built.answers;soloRound=0;soloScore=0;botScore=0;show('game');renderSoloRound();
+ if(soloAdvanceTimeout){clearTimeout(soloAdvanceTimeout);soloAdvanceTimeout=null;}clearTimeout(freezeTimeout);freezeTimeout=null;
+ leaveRealtime(false);gameMode='solo';$('powerupBar').classList.add('hidden');powerupStatusLoading=true;powerupSetUses=0;powerupRoundUsed=false;powerupUsed.clear();['powerExtra','powerReveal','powerFreeze'].forEach(id=>$(id).disabled=true);const built=makeDeck(currentDifficulty(),15);soloDeck=built.deck;soloAnswers=built.answers;soloRound=0;soloScore=0;botScore=0;soloCorrect=0;soloResponseTimes=[];show('game');renderSoloRound();
 }
 function renderSoloRound(){
  if(soloRound>=soloDeck.length){finishSolo();return}
- $('roundLabel').textContent=tr('roundOf',{current:soloRound+1,total:soloDeck.length});$('progress').style.width=(soloRound/soloDeck.length*100)+'%';
+ $('roundLabel').textContent=tr('roundOf',{current:soloRound+1,total:soloDeck.length});setProgress(soloRound,soloDeck.length);
  $('youLabel').firstChild.textContent=tr('yourScore');$('opLabel').firstChild.textContent=tr('computer');$('seriesScore').classList.add('hidden');updateScores(soloScore,botScore);
  const expected=soloAnswers[soloRound];
  renderChallenge(soloDeck[soloRound],answer=>{if(roundLocked)return;const correct=String(answer)===expected;finishSoloRound(correct)});
  startTimer(()=>finishSoloRound(false,true),soloDeck[soloRound].timeLimit||30);
 }
 function finishSoloRound(correct,timedOut=false){
- if(roundLocked)return;roundLocked=true;stopTimer();playFx(correct?'correct':'lose');if(correct)vibrate(45);
+ if(roundLocked)return;roundLocked=true;const responseMs=elapsed();stopTimer();if(correct&&!timedOut){soloCorrect++;soloResponseTimes.push(responseMs)}playFx(correct?'correct':'lose');if(correct)vibrate(45);
  const points=correct?Math.max(10,Math.round(100+remaining*8)):0;
  soloScore+=points;botScore+=rand(45)+20;updateScores(soloScore,botScore);
  $('gameContent').querySelectorAll('button').forEach(b=>b.disabled=true);
@@ -880,8 +886,12 @@ function finishSoloRound(correct,timedOut=false){
 }
 function finishSolo(){
  stopTimer();localStorage.setItem('ccBest',String(Math.max(Number(localStorage.getItem('ccBest')||0),soloScore)));setBest();
- $('finalScore').textContent=soloScore;$('resultTitle').textContent=soloScore>=botScore?tr('youBeatComputer'):tr('computerWon');playFx(soloScore>=botScore?'win':'lose');
- $('resultRows').innerHTML=tr('soloResultRows',{you:soloScore,opponent:botScore});$('playAgain').classList.remove('hidden');$('playAgain').disabled=false;show('result');
+ renderSoloResult();playFx(soloScore>=botScore?'win':'lose');$('playAgain').classList.remove('hidden');$('playAgain').disabled=false;show('result');
+}
+function renderSoloResult(){
+ $('finalScore').textContent=soloScore;$('resultTitle').textContent=soloScore>=botScore?tr('youBeatComputer'):tr('computerWon');
+ const accuracy=Math.round(soloCorrect/Math.max(1,soloDeck.length)*100),bestResponse=soloResponseTimes.length?Math.min(...soloResponseTimes):null;
+ $('resultRows').innerHTML=tr('soloResultRows',{you:soloScore,opponent:botScore})+'<p>'+tr('soloCorrectLabel')+': <b>'+soloCorrect+' / '+soloDeck.length+'</b></p><p>'+tr('soloAccuracyLabel')+': <b>'+accuracy+'%</b></p><p>'+tr('soloBestTimeLabel')+': <b>'+(bestResponse===null?'—':(bestResponse/1000).toFixed(1)+'s')+'</b></p>';
 }
 
 function getConfig(){try{return JSON.parse(localStorage.getItem('ccSupabase')||'null')||DEFAULT_SUPABASE_CONFIG}catch{return DEFAULT_SUPABASE_CONFIG}}
@@ -959,7 +969,7 @@ function handleRoomUpdate(){
  if(room.status==='waiting'){show('lobby');renderLobby();return}
  if(room.status==='playing'){
   $('powerupBar').classList.remove('hidden');$('powerupInfo').classList.remove('hidden');
-  show('game');$('progress').style.width=(room.round*10)+'%';handleRoomLabels();
+  show('game');setProgress(room.round,10);handleRoomLabels();
   const meHost=isHost();
   updateScores(meHost?room.host_score:room.guest_score,meHost?room.guest_score:room.host_score);
   if(lastRenderedRound!==room.round){lastRenderedRound=room.round;multiSubmitted=false;message('feedback','');renderChallenge(room.deck[room.round],submitMulti);powerupStatusLoading=true;powerupRoundUsed=false;renderPowerupControls();loadPowerupUsage();startTimer(()=>submitMulti('__TIMEOUT__'),room.deck[room.round]?.timeLimit||30)}
@@ -987,8 +997,8 @@ async function submitMulti(answer){
   if(room?.status==='playing'&&room.round===submittedRound)message('feedback',data?.correct?(data?.powerup_penalty?tr('powerupPenalty')+' +'+data.points:tr('correctWaiting',{points:data.points})):tr('answerWaiting'));
  }catch(e){multiSubmitted=false;renderPowerupControls();message('feedback',tr('submitFailed')+': '+(e.message||e));}
 }
-function showOnlineResult(){
- stopTimer();loadMatchHistory().catch(e=>console.warn('Match history:',e.message));playFx((isHost()?room.host_score>room.guest_score:room.guest_score>room.host_score)?'win':'lose');vibrate([50,30,70]);
+function showOnlineResult(withEffects=true){
+ if(withEffects){stopTimer();loadMatchHistory().catch(e=>console.warn('Match history:',e.message));playFx((isHost()?room.host_score>room.guest_score:room.guest_score>room.host_score)?'win':'lose');vibrate([50,30,70]);}
  const meHost=isHost(),my=meHost?room.host_score:room.guest_score,op=meHost?room.guest_score:room.host_score;
  const myWins=meHost?Number(room.host_wins||0):Number(room.guest_wins||0);
  const opWins=meHost?Number(room.guest_wins||0):Number(room.host_wins||0);
@@ -1009,7 +1019,7 @@ function showOnlineResult(){
 }
 function escapeText(value){return String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function leaveRealtime(showHome=true){
- stopTimer();if(soloAdvanceTimeout){clearTimeout(soloAdvanceTimeout);soloAdvanceTimeout=null;}
+ stopTimer();if(soloAdvanceTimeout){clearTimeout(soloAdvanceTimeout);soloAdvanceTimeout=null;}if(freezeTimeout){clearTimeout(freezeTimeout);freezeTimeout=null;}
  powerupSetUses=0;powerupRoundUsed=false;powerupStatusLoading=false;powerupTypesUsed.clear();powerupTimeBonus=0;frozenUntil=0;$('powerupBar').classList.add('hidden');$('powerupInfo').classList.add('hidden');
  const db=backend,channels=[eventChannel,roomChannel].filter(Boolean);eventChannel=null;roomChannel=null;room=null;lastRenderedRound=-1;multiSubmitted=false;powerupUsed.clear();['powerExtra','powerReveal','powerFreeze'].forEach(id=>$(id).disabled=false);
  // Change screens immediately; network channel cleanup must never block the exit button.
@@ -1425,7 +1435,7 @@ $('settingsOpen').onclick=openSettings;$('settingsBack').onclick=()=>show('home'
 $('createRoom').onclick=createRoom;$('joinRoom').onclick=joinRoom;$('startOnline').onclick=startOnline;
 $('copyCode').onclick=async()=>{try{await navigator.clipboard.writeText(room.code);message('lobbyMessage',tr('codeCopied'))}catch{message('lobbyMessage',tr('manualCode',{code:room.code}))}};
 $('shareCode').onclick=async()=>{const text=tr('shareInvite',{code:room.code});try{if(navigator.share)await navigator.share({title:'Color Clash',text});else{await navigator.clipboard.writeText(text);message('lobbyMessage',tr('codeCopied'))}}catch{}};
-$('leaveRoom').onclick=()=>leaveRealtime(true);$('quitGame').onclick=()=>{if(gameMode==='online')leaveRealtime(true);else{if(soloAdvanceTimeout){clearTimeout(soloAdvanceTimeout);soloAdvanceTimeout=null;}stopTimer();show('home')}};
+$('leaveRoom').onclick=()=>leaveRealtime(true);$('quitGame').onclick=leaveCurrentMatch;
 $('nextRound').onclick=()=>{};$('playAgain').onclick=()=>{if(gameMode==='solo')startSolo();else if(gameMode==='online'&&room&&room.status==='finished'&&Math.max(Number(room.host_wins||0),Number(room.guest_wins||0))<3&&isHost())startOnline()};$('resultHome').onclick=()=>leaveRealtime(true);
 $('saveSettings').onclick=saveSettings;$('clearSettings').onclick=()=>{localStorage.removeItem('ccSupabase');backend=null;currentUser=null;$('supabaseUrl').value='';$('supabaseKey').value='';setConnection('Solo mode available');message('settingsMessage',tr('settingsCleared'))};
 $('playerName').value=localPlayerName;setBest();
@@ -1443,11 +1453,10 @@ document.querySelectorAll('[data-reaction]').forEach(b=>b.onclick=()=>sendReacti
 
 function handlePhoneBack(){
  const active=screens.find(id=>!$(id).classList.contains('hidden'))||'home';
+ if($('profileDetails').open){$('profileDetails').open=false;return}
  if(active==='home')return;
  if(active==='game'){
-  if(gameMode==='online'){leaveRealtime(true);return}
-  if(soloAdvanceTimeout){clearTimeout(soloAdvanceTimeout);soloAdvanceTimeout=null;}
-  stopTimer();show('home');return;
+  leaveCurrentMatch();return;
  }
  if(active==='result'){
   if(gameMode==='online')leaveRealtime(true);else show('home');
@@ -1456,6 +1465,12 @@ function handlePhoneBack(){
  if(active==='lobby'){leaveRealtime(true);return}
  if(active==='multiLobby'||active==='multiGame'){leaveMultiRoom();return}
  show('home');
+}
+function leaveCurrentMatch(){
+ if(!window.confirm(tr('leaveMatchConfirm')))return;
+ if(gameMode==='online'){leaveRealtime(true);return}
+ if(soloAdvanceTimeout){clearTimeout(soloAdvanceTimeout);soloAdvanceTimeout=null;}
+ clearTimeout(freezeTimeout);freezeTimeout=null;stopTimer();show('home');
 }
 function installPhoneBackNavigation(){
  try{

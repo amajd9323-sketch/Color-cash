@@ -1,6 +1,43 @@
 -- Color Clash Fair Play Upgrade
 -- Run after supabase.sql. This is additive and preserves rooms, profiles, friends and scores.
 
+-- Earlier installs did not have series counters or the event table used by the
+-- client power-up controls. Add them in place so existing room codes remain valid.
+create schema if not exists private;
+alter table public.cc_rooms
+  add column if not exists set_number integer not null default 0 check (set_number >= 0),
+  add column if not exists host_wins integer not null default 0 check (host_wins between 0 and 3),
+  add column if not exists guest_wins integer not null default 0 check (guest_wins between 0 and 3);
+
+create table if not exists public.cc_room_events (
+  id bigint generated always as identity primary key,
+  code text not null references public.cc_rooms(code) on delete cascade,
+  set_number integer not null check (set_number >= 0),
+  round integer not null check (round between 0 and 9),
+  actor_id uuid not null references auth.users(id) on delete cascade,
+  event_type text not null,
+  payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+create index if not exists cc_room_events_actor_set_idx
+  on public.cc_room_events(code,set_number,actor_id,event_type);
+create index if not exists cc_room_events_code_round_idx
+  on public.cc_room_events(code,set_number,round);
+alter table public.cc_room_events enable row level security;
+drop policy if exists "cc room members can read events" on public.cc_room_events;
+create policy "cc room members can read events" on public.cc_room_events
+  for select to authenticated using (exists (
+    select 1 from public.cc_rooms r where r.code = cc_room_events.code
+      and (r.host_id = (select auth.uid()) or r.guest_id = (select auth.uid()))
+  ));
+revoke all on public.cc_room_events from anon, authenticated;
+grant select on public.cc_room_events to authenticated;
+alter table public.cc_room_events replica identity full;
+do $$ begin
+  alter publication supabase_realtime add table public.cc_room_events;
+exception when duplicate_object then null;
+end $$;
+
 create table if not exists public.cc_match_history (
   id bigint generated always as identity primary key,
   room_code text not null,
@@ -95,6 +132,75 @@ begin
   return v_event;
 end;
 $function$;
+
+-- Start the next set safely: only the host can start it, and the answer/submission
+-- state from the prior set is cleared after its history row has been saved.
+create or replace function public.cc_start_room(p_code text, p_deck jsonb, p_answers jsonb)
+returns public.cc_rooms
+language plpgsql
+security definer
+set search_path = pg_catalog, public, auth
+as $function$
+declare
+  v_room public.cc_rooms;
+begin
+  select * into v_room from public.cc_rooms
+  where code = upper(trim(p_code)) for update;
+  if not found then raise exception 'Room not found'; end if;
+  if auth.uid() is distinct from v_room.host_id then raise exception 'Only the host can start the game'; end if;
+  if v_room.guest_id is null then raise exception 'Waiting for the second player'; end if;
+  if v_room.status not in ('waiting','finished') then raise exception 'Game is already in progress'; end if;
+  if v_room.host_wins >= 3 or v_room.guest_wins >= 3 then raise exception 'The series is already finished'; end if;
+  if jsonb_typeof(p_deck) is distinct from 'array' or jsonb_array_length(p_deck) <> 10 then
+    raise exception 'The game deck must contain 10 rounds';
+  end if;
+  if jsonb_typeof(p_answers) is distinct from 'array' or jsonb_array_length(p_answers) <> 10 then
+    raise exception 'The answer key must contain 10 answers';
+  end if;
+
+  delete from public.cc_room_submissions where code = v_room.code;
+  insert into public.cc_room_answers(code,answers)
+  values(v_room.code,p_answers)
+  on conflict (code) do update set answers = excluded.answers;
+
+  update public.cc_rooms
+  set status='playing',round=0,set_number=set_number+1,host_score=0,guest_score=0,
+      host_answered=false,guest_answered=false,deck=p_deck,updated_at=now()
+  where code=v_room.code returning * into v_room;
+  return v_room;
+end;
+$function$;
+
+create or replace function public.cc_room_event_send(
+  p_code text, p_event_type text, p_payload jsonb default '{}'::jsonb
+)
+returns public.cc_room_events
+language plpgsql
+security definer
+set search_path = pg_catalog, public, auth
+as $function$
+begin
+  return private.cc_room_event_send_core(p_code,p_event_type,p_payload);
+end;
+$function$;
+
+create or replace function public.cc_submit_answer(p_code text, p_answer text, p_elapsed_ms integer)
+returns json
+language plpgsql
+security definer
+set search_path = pg_catalog, public, auth
+as $function$
+begin
+  return private.cc_submit_answer_core(p_code,p_answer,p_elapsed_ms);
+end;
+$function$;
+
+revoke all on function public.cc_start_room(text,jsonb,jsonb) from public, anon;
+revoke all on function public.cc_room_event_send(text,text,jsonb) from public, anon;
+revoke all on function public.cc_submit_answer(text,text,integer) from public, anon;
+grant execute on function public.cc_start_room(text,jsonb,jsonb) to authenticated;
+grant execute on function public.cc_room_event_send(text,text,jsonb) to authenticated;
+grant execute on function public.cc_submit_answer(text,text,integer) to authenticated;
 
 create or replace function private.cc_submit_answer_core(
   p_code text, p_answer text, p_elapsed_ms integer
