@@ -223,14 +223,76 @@ const pick = a => a[rand(a.length)];
 const shuffle = a => [...a].sort(()=>Math.random()-.5);
 let backend=null, currentUser=null, room=null, roomChannel=null;
 let gameMode='solo', soloDeck=[], soloAnswers=[], soloRound=0, soloScore=0, botScore=0;
-let gameTimer=null, roundStartedAt=0, remaining=20, roundLocked=false, multiSubmitted=false, lastRenderedRound=-1, memoryInput=[];
+let gameTimer=null, roundStartedAt=0, remaining=30, roundLocked=false, multiSubmitted=false, lastRenderedRound=-1, memoryInput=[];
+let language=['en','tr'].includes(localStorage.getItem('ccLanguage'))?localStorage.getItem('ccLanguage'):'en';
+let connectionMessage='Solo mode available';
 let localPlayerName=localStorage.getItem('ccPlayerName')||'Player';
 // Public Supabase client settings. This publishable key is intended for browser use; protect data with RLS.
 const DEFAULT_SUPABASE_CONFIG={url:'https://aburwotarmzycgbfqkle.supabase.co',key:'sb_publishable_XxnQi7epJ6rV-h1o3mcq1g_RymFo3US'};
-
+const LANG={
+en:{
+ settings:'Settings',soloAvailable:'Solo mode available',connecting:'Connecting to game server',connected:'Connected to game server',disconnected:'Disconnected',
+ soloTitle:'Solo Challenge',soloDesc:'15 rounds against the computer. Beat your best score.',createTitle:'Create Room',createDesc:'Create a private room and share the code with a friend.',joinTitle:'Join Room',joinDesc:'Enter your friend’s room code and play together.',howTitle:'How to Play',howDesc:'Learn the challenges and scoring rules.',
+ bestScore:'Best Score',roundTypes:'15 rounds • 3 challenge types',difficulty:'Difficulty',relaxed:'Relaxed · 35 sec',normal:'Normal · 30 sec',hard:'Hard · 25 sec',extreme:'Extreme · 20 sec',seriesHint:'Online series: 10 rounds per set. First player to win 3 sets wins.',
+ settingsBadge:'Multiplayer Connection',settingsTitle:'Connection Settings',settingsDescription:'Enter your Supabase Project URL and anon / publishable key only.',
+ playerName:'Player Name',enterName:'Enter your name',roomCode:'Room Code',createRoom:'Create Room',joinRoom:'Join Room',copyCode:'Copy Code',share:'Share',leaveRoom:'Leave Room',startMatch:'Start Match',
+ createRoomTitle:'Create Room',joinRoomTitle:'Join Room',waitingPlayer:'Waiting for Player 2...',bothReady:'Both players are ready. The host can start the match.',waitingPlayer2:'Waiting for Player 2 to join...',roomStatus:'Room status: {status}',
+ roundOf:'Round {current} / {total}',yourScore:'Your Score',opponent:'Opponent',computer:'Computer',nextRound:'Next Round →',exit:'Exit',
+ findTitle:'Find the Odd Color',matchTitle:'Color Match',memoryTitle:'Memory Challenge',findHint:'Choose the tile that is different from the others.',matchHint:'Choose the exact color that matches the target.',memoryHint:'Memorize the sequence, then tap the colors in the same order.',target:'Target Color',watchColors:'Watch the colors...',yourTurn:'Your turn!',
+ correct:'Correct! +{points} points',wrong:'Incorrect answer. Try again next round.',timeUp:'Time is up!',youBeatComputer:'You beat the computer!',computerWon:'The computer won this time',
+ soloResultRows:'<p>Your Score: <b>{you}</b></p><p>Computer score: <b>{opponent}</b></p>',playAgain:'Play Again',home:'Home',back:'← Back',howToPlay:'How to Play',
+ findColor:'🎯 Find the odd color on the board.',colorMatch:'🎨 Choose the exact matching color.',memory:'🧠 Watch the color sequence, then repeat it in order.',
+ howScoring:'Each round has its own time limit. Faster correct answers earn more points. Online matches use 10 rounds per set; first to 3 set wins takes the series.',
+ onlineRoom:'Online Room',codeCopied:'Room code copied.',manualCode:'Copy the code manually: {code}',shareInvite:'Join my Color Clash match. Room code: {code}',
+ preparingSet:'Preparing set {set}...',submitWaiting:'Your answer was submitted. Waiting for your opponent...',correctWaiting:'Correct! +{points} points. Waiting for the other player.',answerWaiting:'Answer locked. Waiting for the other player.',
+ setWon:'You won Set {set}!',setLost:'Your friend won Set {set}.',setDraw:'Set {set} is a draw!',seriesWon:'YOU WON THE SERIES!',seriesLost:'Your friend won the series.',nextSet:'Play Set {set}',waitingHost:'Waiting for host to start Set {set}',
+ seriesScore:'Series wins — You: {you} | Opponent: {opponent}',setScore:'Set score — You: {you} | Opponent: {opponent}',firstToThree:'First player to 3 set wins takes the series.',roomLabel:'Room: {code}',
+ connectedSuccessfully:'Connected successfully. You can now create a room or join a friend.'
+},
+tr:{
+ settings:'Ayarlar',soloAvailable:'Tek oyunculu mod kullanılabilir',connecting:'Oyun sunucusuna bağlanıyor',connected:'Oyun sunucusuna bağlandı',disconnected:'Bağlantı kesildi',
+ soloTitle:'Tek Oyunculu Mücadele',soloDesc:'Bilgisayara karşı 15 tur oyna. En iyi skorunu geç.',createTitle:'Oda Oluştur',createDesc:'Özel bir oda oluştur ve kodu arkadaşınla paylaş.',joinTitle:'Odaya Katıl',joinDesc:'Arkadaşının oda kodunu gir ve birlikte oyna.',howTitle:'Nasıl Oynanır?',howDesc:'Görevleri ve puanlama kurallarını öğren.',
+ bestScore:'En İyi Skor',roundTypes:'15 tur • 3 görev türü',difficulty:'Zorluk',relaxed:'Rahat · 35 sn',normal:'Normal · 30 sn',hard:'Zor · 25 sn',extreme:'Uzman · 20 sn',seriesHint:'Çevrimiçi seri: Her set 10 turdur. İlk 3 seti kazanan oyuncu seriyi kazanır.',
+ settingsBadge:'Çok Oyunculu Bağlantı',settingsTitle:'Bağlantı Ayarları',settingsDescription:'Yalnızca Supabase proje URL’sini ve anon / publishable anahtarını gir.',
+ playerName:'Oyuncu Adı',enterName:'Adını gir',roomCode:'Oda Kodu',createRoom:'Oda Oluştur',joinRoom:'Odaya Katıl',copyCode:'Kodu Kopyala',share:'Paylaş',leaveRoom:'Odadan Ayrıl',startMatch:'Maçı Başlat',
+ createRoomTitle:'Oda Oluştur',joinRoomTitle:'Odaya Katıl',waitingPlayer:'2. oyuncu bekleniyor...',bothReady:'İki oyuncu hazır. Ev sahibi maçı başlatabilir.',waitingPlayer2:'2. oyuncunun katılması bekleniyor...',roomStatus:'Oda durumu: {status}',
+ roundOf:'Tur {current} / {total}',yourScore:'Senin Puanın',opponent:'Rakip',computer:'Bilgisayar',nextRound:'Sonraki Tur →',exit:'Çıkış',
+ findTitle:'Farklı Rengi Bul',matchTitle:'Renk Eşleştirme',memoryTitle:'Hafıza Görevi',findHint:'Diğerlerinden farklı olan kareye dokun.',matchHint:'Hedef renkle tamamen aynı olan rengi seç.',memoryHint:'Renk sırasını ezberle ve aynı sırayla dokun.',target:'Hedef Renk',watchColors:'Renkleri izle...',yourTurn:'Senin sıran!',
+ correct:'Doğru! +{points} puan',wrong:'Yanlış cevap. Sonraki turda tekrar dene.',timeUp:'Süre doldu!',youBeatComputer:'Bilgisayarı yendin!',computerWon:'Bu kez bilgisayar kazandı',
+ soloResultRows:'<p>Senin puanın: <b>{you}</b></p><p>Bilgisayar puanı: <b>{opponent}</b></p>',playAgain:'Tekrar Oyna',home:'Ana Sayfa',back:'← Geri',howToPlay:'Nasıl Oynanır?',
+ findColor:'🎯 Tahtadaki farklı rengi bul.',colorMatch:'🎨 Hedefle aynı olan rengi seç.',memory:'🧠 Renk sırasını izle ve tekrar et.',
+ howScoring:'Her turun kendi süre sınırı vardır. Doğru ve hızlı cevaplar daha çok puan kazandırır. Çevrimiçi her set 10 turdur; ilk 3 seti kazanan seriyi alır.',
+ onlineRoom:'Çevrimiçi Oda',codeCopied:'Oda kodu kopyalandı.',manualCode:'Kodu elle kopyala: {code}',shareInvite:'Color Clash maçına katıl. Oda kodu: {code}',
+ preparingSet:'{set}. set hazırlanıyor...',submitWaiting:'Cevabın gönderildi. Rakip bekleniyor...',correctWaiting:'Doğru! +{points} puan. Diğer oyuncu bekleniyor.',answerWaiting:'Cevap kilitlendi. Diğer oyuncu bekleniyor.',
+ setWon:'{set}. seti kazandın!',setLost:'Arkadaşın {set}. seti kazandı.',setDraw:'{set}. set berabere!',seriesWon:'SERİYİ KAZANDIN!',seriesLost:'Arkadaşın seriyi kazandı.',nextSet:'{set}. Sete Başla',waitingHost:'Ev sahibinin {set}. seti başlatması bekleniyor',
+ seriesScore:'Seri galibiyetleri — Sen: {you} | Rakip: {opponent}',setScore:'Set skoru — Sen: {you} | Rakip: {opponent}',firstToThree:'İlk 3 seti kazanan seriyi kazanır.',roomLabel:'Oda: {code}',
+ connectedSuccessfully:'Bağlantı başarılı. Artık oda oluşturabilir veya arkadaşına katılabilirsin.'
+}
+};
+const connectionKeys={'Solo mode available':'soloAvailable','Connecting to game server':'connecting','Connected to game server':'connected','Disconnected':'disconnected'};
+function tr(key,vars={}){let value=(LANG[language]&&LANG[language][key])||LANG.en[key]||key;for(const [k,v] of Object.entries(vars))value=value.replaceAll('{'+k+'}',String(v));return value}
 function show(id){screens.forEach(s=>$(s).classList.toggle('hidden',s!==id))}
-function message(id,text){$(id).textContent=text||''}
-function setConnection(text,good=false){$('connection').textContent=(good?'● ':'● ')+text;$('connection').style.color=good?'#55efad':'#c3cbe2'}
+function message(id,text){const el=$(id);if(el)el.textContent=text||''}
+function setConnection(text,good=false){connectionMessage=text;$('connection').textContent='● '+tr(connectionKeys[text]||text);$('connection').style.color=good?'#55efad':'#c3cbe2'}
+function applyLanguage(){
+ document.documentElement.lang=language;
+ const selectors=[['#solo h3','soloTitle'],['#solo p','soloDesc'],['#create h3','createTitle'],['#create p','createDesc'],['#join h3','joinTitle'],['#join p','joinDesc'],['#how h3','howTitle'],['#how p','howDesc']];
+ for(const [selector,key] of selectors){const el=document.querySelector(selector);if(el)el.textContent=tr(key)}
+ $('languageSelect').value=language;$('settingsOpen').textContent='⚙ '+tr('settings');
+ $('difficultyLabel').textContent=tr('difficulty');for(const option of $('difficultySelect').options)option.textContent=tr(option.value);
+ $('roundTypesNote').textContent=tr('roundTypes');$('seriesHint').textContent=tr('seriesHint');
+ $('best').textContent=tr('bestScore')+': '+(Number(localStorage.getItem('ccBest')||0));
+ $('playerNameLabel').textContent=tr('playerName');$('playerName').placeholder=tr('enterName');$('roomInputLabel').textContent=tr('roomCode');
+ $('lobbyBack').textContent=tr('back');$('howBack').textContent=tr('back');$('settingsBack').textContent=tr('back');
+ $('howTitle').textContent=tr('howToPlay');$('howFind').textContent=tr('findColor');$('howMatch').textContent=tr('colorMatch');$('howMemory').textContent=tr('memory');$('howScoring').textContent=tr('howScoring');
+ $('connectionBadge').textContent=tr('settingsBadge');$('settingsTitle').textContent=tr('settingsTitle');$('settingsDescription').textContent=tr('settingsDescription');
+ $('createRoom').textContent=tr('createRoom');$('joinRoom').textContent=tr('joinRoom');$('copyCode').textContent=tr('copyCode');$('shareCode').textContent=tr('share');$('leaveRoom').textContent=tr('leaveRoom');$('startOnline').textContent=tr('startMatch');
+ $('quitGame').textContent=tr('exit');$('nextRound').textContent=tr('nextRound');$('playAgain').textContent=tr('playAgain');$('resultHome').textContent=tr('home');
+ $('connection').textContent='● '+tr(connectionKeys[connectionMessage]||connectionMessage);
+ if(room&&room.status==='playing')handleRoomLabels();
+ if(room&&room.status==='finished')showOnlineResult();
+ if(gameMode==='solo'&&!$('game').classList.contains('hidden')){ $('roundLabel').textContent=tr('roundOf',{current:soloRound+1,total:soloDeck.length});$('youLabel').firstChild.textContent=tr('yourScore');$('opLabel').firstChild.textContent=tr('computer');if(soloDeck[soloRound])localizeChallenge(soloDeck[soloRound])}
+}
 function stopTimer(){if(gameTimer){clearInterval(gameTimer);gameTimer=null}}
 function elapsed(){return Math.max(0,Math.min(20000,Date.now()-roundStartedAt))}
 function startTimer(onTimeout){
